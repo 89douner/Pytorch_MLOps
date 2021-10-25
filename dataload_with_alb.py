@@ -9,6 +9,7 @@ import os
 import albumentations as A
 from albumentations.pytorch import transforms
 
+test = 0
 
 class DiseaseDataset(object):
     def __init__(self, data_dir, img_size, bit, num_classes, classes_name, data_type=None, mode=None):
