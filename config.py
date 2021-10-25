@@ -21,7 +21,7 @@ sweep_config = {
         },
     'parameters' : {
         'optimizer': {
-            'values': ['adam', 'sgd']
+            'values': ['adam', 'sgd', 'adabelief']
             },
         'warm_up':{
             'values': ['yes', 'no']
