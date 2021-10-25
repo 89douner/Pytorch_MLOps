@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
+from efficientnet_pytorch import EfficientNet
 
 # -*- coding: utf-8 -*-
 """
@@ -13,9 +14,33 @@ Programmed by Aladdin Persson <aladdin.persson at hotmail dot com>
 *    2020-04-12 Initial coding
 """
 
-import torch
-import torch.nn as nn
+class Efficient(nn.Module):
+    def __init__(self, img_channel, num_classes):
+        super(Efficient, self).__init__()
+        #  advprop : Adversarial Propagation
+        self.backbone = EfficientNet.from_pretrained("efficientnet-b5", advprop=True, num_classes=num_classes)
+        self.backbone._conv_stem.in_channels = img_channel
+        self.weight = self.backbone._conv_stem.weight.mean(img_channel, keepdim=True)
+        self.backbone._conv_stem.weight = nn.Parameter(self.weight)
+    
+    def forward(self, x):
+        x = self.backbone(x)
+        return x
 
+  
+class Resnet101(nn.Module):
+    def __init__(self, img_channel, num_classes, pretrained=True):
+        super(Resnet101, self).__init__()
+        self.backbone = models.resnet101(pretrained=pretrained)
+        self.backbone.conv1 = nn.Conv2d(img_channel, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+
+        self.backbone.fc = nn.Sequential(nn.Linear(2048, 128),
+                                         nn.ReLU(inplace=True),
+                                         nn.Linear(128, num_classes))
+    
+    def forward(self, x):
+        x = self.backbone(x)
+        return x
 
 class block(nn.Module):
     def __init__(
