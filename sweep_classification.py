@@ -13,6 +13,8 @@ from dataload_with_alb  import DiseaseDataset
 from torch.utils.data import DataLoader
 
 from warmup_scheduler import GradualWarmupScheduler
+from adabelief_pytorch import AdaBelief
+
 import wandb
 import config
 
@@ -58,7 +60,9 @@ def wandb_setting():
         optimizer_ft = optim.SGD(net.parameters(), lr=w_config.learning_rate, momentum=0.9)# optimizer 종류 정해주기
     elif w_config.optimizer == 'adam':
         optimizer_ft = optim.Adam(net.parameters(), lr=w_config.learning_rate)
-    #elif w_config.optimizer == 'adabelief':
+    elif w_config.optimizer == 'adabelief':
+        optimizer_ft = AdaBelief(net.parameters(), lr=1e-3, eps=1e-16, betas=(0.9,0.999), weight_decouple = True, rectify = False)
+
 
     ############Learning rate scheduler: Warm-up with ReduceLROnPlateau#################
     scheduler_lr = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer_ft, mode='min', factor=0.5, patience=10)
