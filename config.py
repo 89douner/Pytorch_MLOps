@@ -20,6 +20,9 @@ sweep_config = {
         'goal': 'minimize'   
         },
     'parameters' : {
+        'model': {
+            'value' : 'resnet' # 'values' : ['resnet', 'custom', 'effnet']
+        },
         'optimizer': {
             'values': ['adam', 'sgd', 'adabelief']
             },
