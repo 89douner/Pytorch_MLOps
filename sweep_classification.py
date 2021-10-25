@@ -66,10 +66,10 @@ def wandb_setting():
 
     ############Learning rate scheduler: Warm-up with ReduceLROnPlateau#################
     scheduler_lr = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer_ft, mode='min', factor=0.5, patience=10)
-    """
+
     if w_config.warm_up == 'yes':
         scheduler_lr = GradualWarmupScheduler(optimizer_ft, multiplier=1, total_epoch=5, after_scheduler=scheduler_lr)
-    """
+
     ########################################################################################
 
     wandb.watch(net, log='all') #wandb에 남길 log 기록하기
