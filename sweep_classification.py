@@ -49,9 +49,13 @@ def wandb_setting():
     num_iteration = {x: np.ceil(dataset_sizes[x] / batch_size) for x in ['train', 'val']}
     #############################################################################################################################
 
-    
+    if w_config.model == 'resnet':
+        net = model.Resnet101(img_channel=1, num_classes=num_classes) # pretrained Resnet101 모델 사용
+    elif w_config.model == 'custom':
+        net = model.ResNet50(img_channel=1, num_classes=num_classes) #gray scale = 1, color scale =3
+    elif w_config.model == 'effnet':
+        net = model.Efficient(img_channel=1, num_classes=num_classes) # pretrained Efficient 모델 사용
 
-    net = model.ResNet50(img_channel=1, num_classes=num_classes) #gray scale = 1, color scale =3
     net = net.to(device) #딥러닝 모델 GPU 업로드
 
     criterion = nn.CrossEntropyLoss() #loss 형태 정해주기
