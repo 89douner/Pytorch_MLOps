@@ -75,13 +75,16 @@ def wandb_setting():
         scheduler_lr = GradualWarmupScheduler(optimizer_ft, multiplier=1, total_epoch=5, after_scheduler=scheduler_lr)
 
     ########################################################################################
-
+    patience = 3
     wandb.watch(net, log='all') #wandb에 남길 log 기록하기
-    sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_lr,  device, w_config, classes_name, wandb, num_epoch=w_config.epochs)
+    sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_lr,  \
+        device, w_config, classes_name, wandb, patience= patience,num_epoch=w_config.epochs)
 
     #model_ft = sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_warmup,  device, wandb, num_epoch=30)
 
-sweep_id = wandb.sweep(config.sweep_config, project="test", entity="douner89")
+#sweep_id = wandb.sweep(config.sweep_config, project="test", entity="douner89")
+sweep_id = wandb.sweep(config.sweep_config, project="test", entity="pebpung")
+
 wandb.agent(sweep_id, wandb_setting, count=5)
 
 
