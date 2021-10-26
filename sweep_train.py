@@ -59,7 +59,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                         loss.backward() #계산된 loss에 의해 backward (gradient) 계산
                         optim.step() #계산된 gradient를 참고하여 backpropagation으로 update
                         
-                        wandb.log({"Train Iteration loss": np.mean(loss_arr)})
+                        wandb.log({"Train Iteration loss": np.mean(loss_arr), 'Iteration_step': iteration_th})
                         print("TRAIN: EPOCH %04d / %04d | ITERATION %04d / %04d | LOSS %.4f" %
                         (epoch, num_epoch, iteration_th, num_iteration['train'], np.mean(loss_arr)))
     
@@ -84,10 +84,10 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
 
             if phase == 'train':
-                wandb.log({'train_epoch_loss': epoch_loss, 'Epoch Train ACC': epoch_acc})
+                wandb.log({'train_epoch_loss': epoch_loss, 'Epoch Train ACC': epoch_acc, 'Epoch_step': epoch})
             
             elif phase == 'val':
-                wandb.log({'val_epoch_loss': epoch_loss, 'Epoch Val ACC': epoch_acc})
+                wandb.log({'val_epoch_loss': epoch_loss, 'Epoch Val ACC': epoch_acc, 'Epoch_step': epoch})
                 
                 
 
