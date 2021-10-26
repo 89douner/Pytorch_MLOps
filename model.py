@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 from efficientnet_pytorch import EfficientNet
+from torchvision import models
 
 # -*- coding: utf-8 -*-
 """
@@ -17,6 +18,7 @@ Programmed by Aladdin Persson <aladdin.persson at hotmail dot com>
 class Efficient(nn.Module):
     def __init__(self, img_channel, num_classes):
         super(Efficient, self).__init__()
+        a = 1
         #  advprop : Adversarial Propagation
         self.backbone = EfficientNet.from_pretrained("efficientnet-b5", advprop=True, num_classes=num_classes)
         self.backbone._conv_stem.in_channels = img_channel
