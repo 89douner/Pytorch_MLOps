@@ -4,8 +4,9 @@ import torch
 import numpy as np
 import gc
 
+from utils import EarlyStopping
 
-def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim, scheduler, device, w_config, classes_name, wandb, num_epoch):
+def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim, scheduler, device, w_config, classes_name, wandb, patience,num_epoch):
     wandb.watch(net, criterion, log='all', log_freq=10)
     
     since = time.time()
@@ -17,6 +18,8 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     #label_name = [i for i in range(len(classes_name))]
     
     epoch_count = 1
+
+    early_stopping = EarlyStopping(patience = patience, verbose = True)
 
     for epoch in range(num_epoch):
         all_labels, all_preds, all_prob = [], [], []
@@ -108,6 +111,13 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                 wandb.log({'pr': wandb.plots.precision_recall(best_all_labels, best_all_prob, classes_name)})
                 # Confusion Matrix
                 wandb.sklearn.plot_confusion_matrix(best_all_labels, best_all_preds, labels=classes_name)
+                
+        if phase == 'val':
+            early_stopping(epoch_loss, net)
+
+            if early_stopping.early_stop:
+                print("Early stopping")
+                break
 
         epoch_count = epoch_count+1
         gc.collect()
