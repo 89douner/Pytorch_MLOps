@@ -30,18 +30,28 @@ class Efficient(nn.Module):
         return x
 
   
-class Resnet101(nn.Module):
+class Pre_Resnet50(nn.Module):
     def __init__(self, img_channel, num_classes, pretrained=True):
-        super(Resnet101, self).__init__()
-        self.backbone = models.resnet101(pretrained=pretrained)
+        super(Pre_Resnet50, self).__init__()
+        self.backbone = models.resnet50(pretrained=pretrained)
         self.backbone.conv1 = nn.Conv2d(img_channel, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
 
-        self.backbone.fc = nn.Sequential(nn.Linear(2048, 128),
-                                         nn.ReLU(inplace=True),
-                                         nn.Linear(128, num_classes))
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512 * 4, num_classes)
     
     def forward(self, x):
-        x = self.backbone(x)
+        x = self.backbone.conv1(x)
+        x = self.backbone.bn1(x)
+        x = self.backbone.relu(x)
+        x = self.backbone.maxpool(x)
+        x = self.backbone.layer1(x)
+        x = self.backbone.layer2(x)
+        x = self.backbone.layer3(x)
+        x = self.backbone.layer4(x)
+
+        x = self.backbone.avgpool(x)
+        x = x.reshape(x.shape[0], -1)
+        x = self.backbone.fc(x)
         return x
 
 class block(nn.Module):

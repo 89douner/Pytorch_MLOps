@@ -18,21 +18,24 @@ from adabelief_pytorch import AdaBelief
 import wandb
 import config
 
-#########Random seed 고정해주기###########
-random_seed = 0 #3407
-random.seed(random_seed)
-torch.manual_seed(random_seed)
-torch.cuda.manual_seed(random_seed)
-torch.cuda.manual_seed_all(random_seed) 
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-np.random.seed(random_seed)
-###########################################
 
 
 def wandb_setting():
     wandb.init(config=config.hyperparameter_defaults)
     w_config = wandb.config
+
+    random_seed = w_config.seed
+    #########Random seed 고정해주기###########
+    random_seed = 0 #3407
+    random.seed(random_seed)
+    torch.manual_seed(random_seed)
+    torch.cuda.manual_seed(random_seed)
+    torch.cuda.manual_seed_all(random_seed) 
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(random_seed)
+    ###########################################
+
 
     batch_size= w_config.batch_size
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -50,11 +53,11 @@ def wandb_setting():
     #############################################################################################################################
 
     if w_config.model == 'resnet':
-        net = model.Resnet101(img_channel=1, num_classes=num_classes) # pretrained Resnet101 모델 사용
-    elif w_config.model == 'custom':
+        net = model.Pre_Resnet50(img_channel=1, num_classes=num_classes) # pretrained Resnet101 모델 사용
+    elif w_config.model == 'scratch':
         net = model.ResNet50(img_channel=1, num_classes=num_classes) #gray scale = 1, color scale =3
-    elif w_config.model == 'effnet':
-        net = model.Efficient(img_channel=1, num_classes=num_classes) # pretrained Efficient 모델 사용
+    #elif w_config.model == 'effnet':
+    #    net = model.Efficient(img_channel=1, num_classes=num_classes) # pretrained Efficient 모델 사용
 
     net = net.to(device) #딥러닝 모델 GPU 업로드
 
@@ -65,7 +68,7 @@ def wandb_setting():
     elif w_config.optimizer == 'adam':
         optimizer_ft = optim.Adam(net.parameters(), lr=w_config.learning_rate)
     elif w_config.optimizer == 'adabelief':
-        optimizer_ft = AdaBelief(net.parameters(), lr=1e-3, eps=1e-16, betas=(0.9,0.999), weight_decouple = True, rectify = False)
+        optimizer_ft = AdaBelief(net.parameters(), lr=1e-3, eps=1e-16, betas=(0.9,0.999), weight_decouple = True, rectify = True)
 
 
     ############Learning rate scheduler: Warm-up with ReduceLROnPlateau#################
@@ -83,9 +86,9 @@ def wandb_setting():
     #model_ft = sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_warmup,  device, wandb, num_epoch=30)
 
 #sweep_id = wandb.sweep(config.sweep_config, project="test", entity="douner89")
-sweep_id = wandb.sweep(config.sweep_config, project="test", entity="pebpung")
+sweep_id = wandb.sweep(config.sweep_config, project="rsna_covid_local", entity="89douner")
 
-wandb.agent(sweep_id, wandb_setting, count=5)
+wandb.agent(sweep_id, wandb_setting, count=48)
 
 
 

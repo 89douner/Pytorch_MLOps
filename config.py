@@ -16,12 +16,12 @@ sweep_config = {
     'project': "test", 
     'entity': 'douner89',
     'metric' : {
-        'name': 'train_epoch_loss',
+        'name': 'val_epoch_loss',
         'goal': 'minimize'   
         },
     'parameters' : {
         'model': {
-            'value' : 'resnet' # 'values' : ['resnet', 'custom', 'effnet']
+            'values' : ['resnet', 'scratch', 'effnet']  #'value' : 'resnet'
         },
         'optimizer': {
             'values': ['adam', 'sgd', 'adabelief']
@@ -29,13 +29,16 @@ sweep_config = {
         'warm_up':{
             'values': ['yes', 'no']
         },
+        'seed':{
+            'values': [0, 3407]
+        },
         ##여러 줄 주석 추가: ctrl+K+C 동시에 누르기
         ##여러줄 주석 해제: ctrl+K+U 동시에 누르기
         # 'dropout': {
         #     'values': [0.3, 0.4, 0.5]
         #     },
         'learning_rate': {
-            'values': [0.001, 0.005, 0.0001]
+            'values': [0.001, 0.005]
             },
         #'batch_size': {
         #    'distribution': 'q_log_uniform',
