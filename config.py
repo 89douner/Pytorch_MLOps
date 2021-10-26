@@ -1,8 +1,8 @@
 import math
 
 hyperparameter_defaults  = {
-        'epochs': 1,
-        'batch_size': 6,
+        'epochs': 30,
+        'batch_size': 16,
         #'fc_layer_size': 128,
         #'weight_decay': 0.0005,
         #'learning_rate': 1e-3,
@@ -21,7 +21,7 @@ sweep_config = {
         },
     'parameters' : {
         'model': {
-            'values' : ['resnet', 'scratch', 'effnet']  #'value' : 'resnet'
+            'values' : ['resnet', 'scratch']  #'value' : 'resnet', ['resnet', 'scratch', 'effnet'] 
         },
         'optimizer': {
             'values': ['adam', 'sgd', 'adabelief']

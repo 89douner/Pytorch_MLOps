@@ -23,6 +23,8 @@ import config
 def wandb_setting():
     wandb.init(config=config.hyperparameter_defaults)
     w_config = wandb.config
+    name_str = 'm:' +  str(w_config.model) + ' -o:' + str(w_config.optimizer) + ' -l:' + str(w_config.learning_rate) + ' -w:' + str(w_config.warm_up) + ' -s:' + str(w_config.seed)
+    wandb.run.name = name_str
 
     random_seed = w_config.seed
     #########Random seed 고정해주기###########
@@ -86,7 +88,7 @@ def wandb_setting():
     #model_ft = sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_warmup,  device, wandb, num_epoch=30)
 
 #sweep_id = wandb.sweep(config.sweep_config, project="test", entity="douner89")
-sweep_id = wandb.sweep(config.sweep_config, project="rsna_covid_local", entity="89douner")
+sweep_id = wandb.sweep(config.sweep_config, project="rsna_covid", entity="89douner")
 
 wandb.agent(sweep_id, wandb_setting, count=48)
 
