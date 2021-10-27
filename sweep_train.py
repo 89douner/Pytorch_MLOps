@@ -16,8 +16,6 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     
     classes_name = classes_name
     #label_name = [i for i in range(len(classes_name))]
-    
-    epoch_count = 1
 
     early_stopping = EarlyStopping(patience = patience, verbose = True)
 
@@ -87,9 +85,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                 wandb.log({'train_epoch_loss': epoch_loss, 'Epoch Train ACC': epoch_acc, 'Epoch_step': epoch})
             
             elif phase == 'val':
-                wandb.log({'val_epoch_loss': epoch_loss, 'Epoch Val ACC': epoch_acc, 'Epoch_step': epoch})
-                
-                
+                wandb.log({'val_epoch_loss': epoch_loss, 'Epoch Val ACC': epoch_acc, 'Epoch_step': epoch})   
 
             print('Epoch {} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
@@ -103,23 +99,18 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                 best_all_preds = all_preds
                 best_all_prob = all_prob
 
-
-            if epoch_count == num_epoch and phase == 'val':
-                # RoC
-                wandb.log({'roc': wandb.plots.ROC(best_all_labels, best_all_prob, classes_name)})
-                # Precision Recall
-                wandb.log({'pr': wandb.plots.precision_recall(best_all_labels, best_all_prob, classes_name)})
-                # Confusion Matrix
-                wandb.sklearn.plot_confusion_matrix(best_all_labels, best_all_preds, labels=classes_name)
-                
         if phase == 'val':
             early_stopping(epoch_loss, net)
 
             if early_stopping.early_stop:
+                # ROC, Precision Recall, Confusion Matrix penel 생성
+                wandb.log({'ROC curve': wandb.plots.ROC(best_all_labels, best_all_prob, classes_name)})
+                wandb.log({'Precision Recall': wandb.plots.precision_recall(best_all_labels, best_all_prob, classes_name)})
+                wandb.sklearn.plot_confusion_matrix(best_all_labels, best_all_preds, labels=classes_name)
+
                 print("Early stopping")
                 break
 
-        epoch_count = epoch_count+1
         gc.collect()
         torch.cuda.empty_cache()
         print()
