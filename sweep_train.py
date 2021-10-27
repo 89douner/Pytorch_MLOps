@@ -19,7 +19,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
 
     early_stopping = EarlyStopping(patience = patience, verbose = True)
 
-    for epoch in range(num_epoch):
+    for epoch in range(1, num_epoch+1):
         all_labels, all_preds, all_prob = [], [], []
 
         for phase in ['train', 'val']:
@@ -43,7 +43,6 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                 # backward pass ← zero the parameter gradients
                 optim.zero_grad()
 
-                
                 with torch.set_grad_enabled(phase == "train"): # track history if only in train
                     outputs = net(inputs) #output 결과값은 softmax 입력 직전의 logit 값들
                     _, preds = torch.max(outputs, 1) #pred: 0 → Normal <== labels 참고
@@ -103,13 +102,12 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
             early_stopping(epoch_loss, net)
 
             if early_stopping.early_stop:
-                # ROC, Precision Recall, Confusion Matrix penel 생성
-                wandb.log({'ROC curve': wandb.plots.ROC(best_all_labels, best_all_prob, classes_name)})
-                wandb.log({'Precision Recall': wandb.plots.precision_recall(best_all_labels, best_all_prob, classes_name)})
-                wandb.sklearn.plot_confusion_matrix(best_all_labels, best_all_preds, labels=classes_name)
-
                 print("Early stopping")
+                wandb_log(wandb, best_all_labels, best_all_preds, best_all_prob, classes_name)
                 break
+
+            elif epoch == num_epoch-1:
+                wandb_log(wandb, best_all_labels, best_all_preds, best_all_prob, classes_name)
 
         gc.collect()
         torch.cuda.empty_cache()
@@ -124,3 +122,9 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     # load best model weights
     net.load_state_dict(best_model_wts)
     return net
+
+def wandb_log(wandb, best_all_labels, best_all_preds, best_all_prob, classes_name):
+    # ROC, Precision Recall, Confusion Matrix penel 생성
+    wandb.log({'ROC curve': wandb.plots.ROC(best_all_labels, best_all_prob, classes_name)})
+    wandb.log({'Precision Recall': wandb.plots.precision_recall(best_all_labels, best_all_prob, classes_name)})
+    wandb.sklearn.plot_confusion_matrix(best_all_labels, best_all_preds, labels=classes_name)
