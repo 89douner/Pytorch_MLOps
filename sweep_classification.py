@@ -38,7 +38,6 @@ def wandb_setting():
     np.random.seed(random_seed)
     ###########################################
 
-
     batch_size= w_config.batch_size
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -58,8 +57,8 @@ def wandb_setting():
         net = model.Pre_Resnet50(img_channel=1, num_classes=num_classes) # pretrained Resnet101 모델 사용
     elif w_config.model == 'scratch':
         net = model.ResNet50(img_channel=1, num_classes=num_classes) #gray scale = 1, color scale =3
-    #elif w_config.model == 'effnet':
-    #    net = model.Efficient(img_channel=1, num_classes=num_classes) # pretrained Efficient 모델 사용
+    elif w_config.model == 'effnet':
+        net = model.Efficient(img_channel=1, num_classes=num_classes) # pretrained Efficient 모델 사용
 
     net = net.to(device) #딥러닝 모델 GPU 업로드
 
@@ -80,7 +79,7 @@ def wandb_setting():
         scheduler_lr = GradualWarmupScheduler(optimizer_ft, multiplier=1, total_epoch=5, after_scheduler=scheduler_lr)
 
     ########################################################################################
-    patience = 3
+    patience = 6
     wandb.watch(net, log='all') #wandb에 남길 log 기록하기
     sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_lr,  \
         device, w_config, classes_name, wandb, patience= patience,num_epoch=w_config.epochs)
@@ -88,10 +87,10 @@ def wandb_setting():
     #model_ft = sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_warmup,  device, wandb, num_epoch=30)
 
 #sweep_id = wandb.sweep(config.sweep_config, project="test", entity="douner89")
-sweep_id = wandb.sweep(config.sweep_config, project="rsna_covid", entity="pneumonia")
+sweep_id = wandb.sweep(config.sweep_config, project="confu_test", entity="pneumonia")
 #sweep_id = wandb.sweep(config.sweep_config, project="rsna_covid", entity="89douner")
 
-wandb.agent(sweep_id, wandb_setting, count=48)
+wandb.agent(sweep_id, wandb_setting, count=10)
 
 
 
