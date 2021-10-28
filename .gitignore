@@ -1,3 +1,4 @@
 RSNA_COVID_png_512/
 wandb/
 __pycache__/
+*.pt
