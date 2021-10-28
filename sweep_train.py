@@ -62,9 +62,9 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     
 
                     elif phase == 'val':
-                        all_labels += labels.to("cpu")
-                        all_preds += preds.to("cpu")
-                        all_prob.extend(outputs.to("cpu").detach().numpy())
+                        all_labels.extend(labels.detach().cpu().numpy())
+                        all_preds.extend(preds.detach().cpu().numpy())
+                        all_prob.extend(outputs.detach().cpu().numpy())
 
                         print("VALID: EPOCH %04d / %04d | BATCH %04d / %04d | LOSS %.4f" %
                                 (epoch, num_epoch, iteration_th, num_iteration['val'], np.mean(loss_arr))) 
@@ -106,7 +106,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                 wandb_log(wandb, best_all_labels, best_all_preds, best_all_prob, classes_name)
                 break
 
-            elif epoch == num_epoch-1:
+            elif epoch == num_epoch:
                 wandb_log(wandb, best_all_labels, best_all_preds, best_all_prob, classes_name)
 
         gc.collect()
@@ -127,4 +127,4 @@ def wandb_log(wandb, best_all_labels, best_all_preds, best_all_prob, classes_nam
     # ROC, Precision Recall, Confusion Matrix penel 생성
     wandb.log({'ROC curve': wandb.plots.ROC(best_all_labels, best_all_prob, classes_name)})
     wandb.log({'Precision Recall': wandb.plots.precision_recall(best_all_labels, best_all_prob, classes_name)})
-    wandb.sklearn.plot_confusion_matrix(best_all_labels, best_all_preds, labels=classes_name)
+    wandb.log({"Confusion Matrix" : wandb.plot.confusion_matrix(preds=best_all_preds, y_true=best_all_labels, class_names=classes_name)})

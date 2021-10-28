@@ -25,14 +25,14 @@ class DiseaseDataset(object):
         if self.mode == 'train':
             self.transforms = A.Compose([
                 A.Resize(self.image_size, self.image_size),
-                A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=10, p=0.2),
-                A.OneOf([
-                        A.OpticalDistortion(p=0.3),
-                        ], p=0.2),
-                A.OneOf([
-                        A.GaussNoise(p=0.2),
-                        A.MultiplicativeNoise(p=0.2),
-                        ], p=0.2),
+                # A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=10, p=0.2),
+                # A.OneOf([
+                #         A.OpticalDistortion(p=0.3),
+                #         ], p=0.2),
+                # A.OneOf([
+                #         A.GaussNoise(p=0.2),
+                #         A.MultiplicativeNoise(p=0.2),
+                #         ], p=0.2),
                 A.Normalize(mean=(0.485), std=(0.229)),
                 transforms.ToTensorV2()
             ])

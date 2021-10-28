@@ -2,7 +2,7 @@ import math
 
 hyperparameter_defaults  = {
         'epochs': 30,
-        'batch_size': 16,
+        'batch_size': 3,
         #'fc_layer_size': 128,
         #'weight_decay': 0.0005,
         #'learning_rate': 1e-3,
@@ -12,7 +12,7 @@ hyperparameter_defaults  = {
     }
 
 sweep_config = {
-    'method': 'random',
+    'method': 'bayes',
     'project': "test", 
     'entity': 'douner89',
     'metric' : {
@@ -21,7 +21,7 @@ sweep_config = {
         },
     'parameters' : {
         'model': {
-            'values' : ['resnet', 'scratch']  #'value' : 'resnet', ['resnet', 'scratch', 'effnet'] 
+            'values' : ['resnet', 'effnet']  #'value' : 'resnet', ['resnet', 'scratch', 'effnet'] 
         },
         'optimizer': {
             'values': ['adam', 'sgd', 'adabelief']
