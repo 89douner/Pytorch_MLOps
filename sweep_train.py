@@ -12,7 +12,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     since = time.time()
 
     best_model_wts = copy.deepcopy(net.state_dict())
-    best_loss = 100
+    best_acc = 0
     
     classes_name = classes_name
     #label_name = [i for i in range(len(classes_name))]
@@ -81,17 +81,18 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
 
             if phase == 'train':
-                wandb.log({'train_epoch_loss': epoch_loss, 'Epoch Train ACC': epoch_acc, 'Epoch_step': epoch})
+                wandb.log({'train_epoch_loss': epoch_loss, 'train_epoch_acc': epoch_acc, 'Epoch_step': epoch})
             
             elif phase == 'val':
-                wandb.log({'val_epoch_loss': epoch_loss, 'Epoch Val ACC': epoch_acc, 'Epoch_step': epoch})   
+                wandb.log({'val_epoch_loss': epoch_loss, 'val_epoch_acc': epoch_acc, 'Epoch_step': epoch})   
 
             print('Epoch {} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
             # deep copy the model
-            if epoch_loss < best_loss and phase=='val':
+            if epoch_acc > best_acc and phase=='val':
                 best_all_labels, best_all_preds, best_all_prob = [], [], []
-                best_loss = epoch_loss
+                best_acc = epoch_acc
+                wandb.log({'best_acc': best_acc})
                 best_model_wts = copy.deepcopy(net.state_dict())
                 
                 best_all_labels = all_labels

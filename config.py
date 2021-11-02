@@ -2,7 +2,7 @@ import math
 
 hyperparameter_defaults  = {
         'epochs': 30,
-        'batch_size': 3,
+        'batch_size': 20,
         #'fc_layer_size': 128,
         #'weight_decay': 0.0005,
         #'learning_rate': 1e-3,
@@ -13,15 +13,14 @@ hyperparameter_defaults  = {
 
 sweep_config = {
     'method': 'bayes',
-    'project': "test", 
-    'entity': 'douner89',
+    'name':'bayes-30-sweep',
     'metric' : {
-        'name': 'val_epoch_loss',
-        'goal': 'minimize'   
+        'name': 'best_acc',
+        'goal': 'maximize'   
         },
     'parameters' : {
         'model': {
-            'values' : ['resnet', 'effnet']  #'value' : 'resnet', ['resnet', 'scratch', 'effnet'] 
+            'values' : ['resnet', 'scratch']  #'value' : 'resnet', ['resnet', 'scratch', 'effnet'] 
         },
         'optimizer': {
             'values': ['adam', 'sgd', 'adabelief']
