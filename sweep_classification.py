@@ -87,10 +87,10 @@ def wandb_setting():
     #model_ft = sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_warmup,  device, wandb, num_epoch=30)
 
 #sweep_id = wandb.sweep(config.sweep_config, project="test", entity="douner89")
-sweep_id = wandb.sweep(config.sweep_config, project="confu_test", entity="pneumonia")
+sweep_id = wandb.sweep(config.sweep_config, project="rsna_coivd_grid", entity="pneumonia")
 #sweep_id = wandb.sweep(config.sweep_config, project="rsna_covid", entity="89douner")
 
-wandb.agent(sweep_id, wandb_setting, count=10)
+wandb.agent(sweep_id, wandb_setting, count=48)
 
 
 
