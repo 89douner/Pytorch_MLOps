@@ -20,8 +20,8 @@ import config
 
 
 
-def wandb_setting():
-    wandb.init(config=config.hyperparameter_defaults)
+def wandb_setting(sweep_config=None):
+    wandb.init(config=sweep_config)
     w_config = wandb.config
     name_str = 'm:' +  str(w_config.model) + ' -o:' + str(w_config.optimizer) + ' -l:' + str(w_config.learning_rate) + ' -w:' + str(w_config.warm_up) + ' -s:' + str(w_config.seed)
     wandb.run.name = name_str
