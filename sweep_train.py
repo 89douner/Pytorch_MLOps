@@ -118,7 +118,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
-    print('Best val loss: {:4f}'.format(best_loss))
+    print('Best val acc: {:4f}'.format(best_acc))
 
     # load best model weights
     net.load_state_dict(best_model_wts)
