@@ -6,6 +6,7 @@ import time
 import numpy as np
 from PIL import Image
 import os
+from glob import glob
 
 import albumentations as A
 from albumentations.pytorch import transforms
@@ -20,6 +21,7 @@ class DiseaseDataset(object):
         self.bit = bit #bit(color) depth
         self.numclasses = num_classes
         self.imgs = []
+        self.label = []
         
         ########################## 전처리 코드 ##########################
         if self.mode == 'train':
@@ -47,26 +49,21 @@ class DiseaseDataset(object):
 
         ###data_dir -> train or val 폴더
         self.lst_data = os.listdir(self.data_dir) #train or val 폴더에 들어있는 하위 폴더 -> 클래스 명(알파벳순으로 인덱스 부여) -> ex) normal, pneumonia → lst_data[0]='normal'
-        a = len(self.lst_data)
+        len_lst_data = len(self.lst_data)
 
-        ###data_dir -> train or val // train or val 데이터셋 파일 명과 레이블을 tuple 형태로 구성
-        for i in range(0, a):
-            lst_data_file_name = list(sorted(os.listdir(os.path.join(self.data_dir, self.lst_data[i]))))
-            self.imgs.extend([(self.lst_data[i], j) for j in lst_data_file_name])
+        ### data_dir -> train or val // train or val 데이터셋 파일 명을 불러오고, label을 label의 index로 저장.
+        for i in range(0, len_lst_data):
+            lst_data_file_name = sorted(glob(os.path.join(self.data_dir, self.lst_data[i], '*.png')))
+            self.imgs.extend(lst_data_file_name)
+            self.label.extend([i]*len(self.imgs))
         
     def __len__(self):
         return len(self.imgs)
 
     def __getitem__(self, idx):
         #train or val dataset path + 폴더명(=클래스명) + 파일명
-        img_path = os.path.join(self.data_dir, self.imgs[idx][0], self.imgs[idx][1])  
-        
         if self.type == 'img':
-            img_data = Image.open(img_path)
-
-            #######train or val 데이터 중에 RGB 타입이 숨어있을 경우########
-            if img_data.mode == 'RGB':
-                 img_data = img_data.convert('L')
+            img_data = Image.open(self.imgs[idx]).convert('L')
             
             # 이미 Albumentation에 ToTensorV2가 있기 때문에 255로 나눌 필요가 없음
             np_img = np.array(img_data)
@@ -77,16 +74,12 @@ class DiseaseDataset(object):
                 np_img = np_img[:, :, np.newaxis]
             #↑↑↑그래서 np.newaxis로 차원 하나를 더 만듦  (width, height) → (width, height, dimension)
 
-            for i in range(0, self.numclasses):
-                if self.imgs[idx][0] == self.lst_data[i]:
-                    label = i 
-            
             #label = 0 if self.imgs[idx][0] == 'NORMAL' else 1
             img = self.transforms(image=np_img)["image"]
-            
+            label = self.label[idx]
         
         elif type == 'numpy':
-            numpy_data = np.load(os.path.join(self.data_dir, self.imgs[idx][0], self.imgs[idx][1]))
+            numpy_data = np.load(self.imgs[idx])
             
             if numpy_data.ndim == 2:
                 np_img = numpy_data[:, :, np.newaxis]
