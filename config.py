@@ -4,8 +4,8 @@ sweep_config = {
     'method': 'bayes',
     'name':'bayes-30-sweep',
     'metric' : {
-        'name': 'best_acc',
-        'goal': 'maximize'   
+        'name': 'best_loss',
+        'goal': 'minimize'   
         },
     'parameters' : {
         'epochs': {
