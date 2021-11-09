@@ -28,9 +28,8 @@ def wandb_setting(sweep_config=None):
     name_str = 's:' +  str(w_config.shift) + ' -r:' + str(w_config.rotate) + ' -c:' + str(w_config.contrast) + ' -d:' + str(w_config.distortion) + ' -n:' + str(w_config.noise)
     wandb.run.name = name_str
 
-    random_seed = w_config.seed
     #########Random seed 고정해주기###########
-    random.seed(random_seed)
+    random_seed = w_config.seed
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
     torch.cuda.manual_seed_all(random_seed) 
