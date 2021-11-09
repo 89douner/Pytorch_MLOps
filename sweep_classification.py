@@ -25,12 +25,11 @@ import config
 def wandb_setting(sweep_config=None):
     wandb.init(config=sweep_config)
     w_config = wandb.config
-    name_str = 'm:' +  str(w_config.model) + ' -o:' + str(w_config.optimizer) + ' -l:' + str(w_config.learning_rate) + ' -w:' + str(w_config.warm_up) + ' -s:' + str(w_config.seed)
+    name_str = 's:' +  str(w_config.shift) + ' -r:' + str(w_config.rotate) + ' -c:' + str(w_config.contrast) + ' -d:' + str(w_config.distortion) + ' -n:' + str(w_config.noise)
     wandb.run.name = name_str
 
     random_seed = w_config.seed
     #########Random seed 고정해주기###########
-    random_seed = 0 #3407
     random.seed(random_seed)
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
@@ -48,8 +47,8 @@ def wandb_setting(sweep_config=None):
     classes_name = os.listdir(os.path.join(data_dir, 'train')) #폴더에 들어있는 클래스명
     num_classes =  len(os.listdir(os.path.join(data_dir, 'train'))) #train 폴더 안에 클래스 개수 만큼의 폴더가 있음
 
-    datasets = {x: DiseaseDataset(data_dir=os.path.join(data_dir, x), img_size=512, bit=8, 
-                num_classes=num_classes, classes_name=classes_name, data_type='img', mode= x) for x in ['train', 'val']}
+    datasets = {x: GpuDataset(data_dir=os.path.join(data_dir, x), img_size=512, bit=8, 
+                num_classes=num_classes, classes_name=classes_name, data_type='img', mode= x, w_config=w_config) for x in ['train', 'val']}
     dataloaders = {x: DataLoader(datasets[x], batch_size=batch_size, shuffle=True, num_workers=0) for x in ['train', 'val']}
     dataset_sizes = {x: len(datasets[x]) for x in ['train', 'val']}
     num_iteration = {x: np.ceil(dataset_sizes[x] / batch_size) for x in ['train', 'val']}
@@ -81,7 +80,7 @@ def wandb_setting(sweep_config=None):
         scheduler_lr = GradualWarmupScheduler(optimizer_ft, multiplier=1, total_epoch=5, after_scheduler=scheduler_lr)
 
     ########################################################################################
-    patience = 50
+    patience = 6
     wandb.watch(net, log='all') #wandb에 남길 log 기록하기
     sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_lr,  \
         device, w_config, classes_name, wandb, patience= patience,num_epoch=w_config.epochs)
@@ -95,7 +94,7 @@ project_name = '' # 프로젝트 이름을 설정해주세요.
 entity_name  = '' # 사용자의 이름을 설정해주세요.
 sweep_id = wandb.sweep(config.sweep_config, project=project_name, entity=entity_name)
 
-wandb.agent(sweep_id, wandb_setting, count=1)
+wandb.agent(sweep_id, wandb_setting, count=32)
 
 
 
