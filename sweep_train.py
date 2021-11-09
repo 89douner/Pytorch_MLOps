@@ -12,7 +12,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     since = time.time()
 
     best_model_wts = copy.deepcopy(net.state_dict())
-    best_loss = 100
+    best_loss, best_acc = 100, 0
     
     classes_name = classes_name
     #label_name = [i for i in range(len(classes_name))]
@@ -59,8 +59,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                         wandb.log({"Train Iteration loss": np.mean(loss_arr), 'Iteration_step': iteration_th})
                         print("TRAIN: EPOCH %04d / %04d | ITERATION %04d / %04d | LOSS %.4f" %
                         (epoch, num_epoch, iteration_th, num_iteration['train'], np.mean(loss_arr)))
-    
-
+                        
                     elif phase == 'val':
                         all_labels.extend(labels.detach().cpu().numpy())
                         all_preds.extend(preds.detach().cpu().numpy())
@@ -81,10 +80,10 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
 
             if phase == 'train':
-                wandb.log({'train_epoch_loss': epoch_loss, 'train_epoch_acc': epoch_acc, 'Epoch_step': epoch})
+                wandb.log({'train_epoch_loss': epoch_loss, 'train_epoch_acc': epoch_acc})
             
             elif phase == 'val':
-                wandb.log({'val_epoch_loss': epoch_loss, 'val_epoch_acc': epoch_acc, 'Epoch_step': epoch})   
+                wandb.log({'val_epoch_loss': epoch_loss, 'val_epoch_acc': epoch_acc}, step=epoch)   
 
             print('Epoch {} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
@@ -92,19 +91,24 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
             if epoch_loss < best_loss and phase=='val':
                 best_all_labels, best_all_preds, best_all_prob = [], [], []
                 best_loss = epoch_loss
-                wandb.log({'best_loss': best_loss})
                 best_model_wts = copy.deepcopy(net.state_dict())
                 
                 best_all_labels = all_labels
                 best_all_preds = all_preds
                 best_all_prob = all_prob
 
+            if epoch_acc > best_acc and phase=='val':
+                best_acc = epoch_acc
+
+            wandb.log({'best_acc': best_acc})
+            wandb.log({'best_loss': best_loss})
+
         if phase == 'val':
-            early_stopping(epoch_loss, net)
+            early_stopping(epoch_acc, net)
 
             if early_stopping.early_stop:
-                print("Early stopping")
                 wandb_log(wandb, best_all_labels, best_all_preds, best_all_prob, classes_name)
+                print("Early stopping")
                 break
 
             elif epoch == num_epoch:
@@ -118,7 +122,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
-    print('Best val loss: {:4f}'.format(best_loss))
+    print('Best val loss: {:4f}'.format(best_acc))
 
     # load best model weights
     net.load_state_dict(best_model_wts)
