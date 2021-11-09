@@ -12,7 +12,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     since = time.time()
 
     best_model_wts = copy.deepcopy(net.state_dict())
-    best_acc = 0
+    best_loss = 100
     
     classes_name = classes_name
     #label_name = [i for i in range(len(classes_name))]
@@ -89,10 +89,10 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
             print('Epoch {} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
             # deep copy the model
-            if epoch_acc > best_acc and phase=='val':
+            if epoch_loss < best_loss and phase=='val':
                 best_all_labels, best_all_preds, best_all_prob = [], [], []
-                best_acc = epoch_acc
-                wandb.log({'best_acc': best_acc})
+                best_loss = epoch_loss
+                wandb.log({'best_loss': best_loss})
                 best_model_wts = copy.deepcopy(net.state_dict())
                 
                 best_all_labels = all_labels
@@ -118,7 +118,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
-    print('Best val acc: {:4f}'.format(best_acc))
+    print('Best val loss: {:4f}'.format(best_loss))
 
     # load best model weights
     net.load_state_dict(best_model_wts)

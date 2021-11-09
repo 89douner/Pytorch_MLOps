@@ -10,6 +10,8 @@ import model
 import sweep_train
 
 from dataload_with_alb  import DiseaseDataset
+from dataload_with_alb_gpu  import GpuDataset
+
 from torch.utils.data import DataLoader
 
 from warmup_scheduler import GradualWarmupScheduler
@@ -79,7 +81,7 @@ def wandb_setting(sweep_config=None):
         scheduler_lr = GradualWarmupScheduler(optimizer_ft, multiplier=1, total_epoch=5, after_scheduler=scheduler_lr)
 
     ########################################################################################
-    patience = 6
+    patience = 50
     wandb.watch(net, log='all') #wandb에 남길 log 기록하기
     sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_lr,  \
         device, w_config, classes_name, wandb, patience= patience,num_epoch=w_config.epochs)
@@ -90,9 +92,10 @@ def wandb_setting(sweep_config=None):
 #sweep_id = wandb.sweep(config.sweep_config, project="rsna_covid", entity="89douner")
 
 project_name = '' # 프로젝트 이름을 설정해주세요.
-sweep_id = wandb.sweep(config.sweep_config, project=project_name, entity="pneumonia")
+entity_name  = '' # 사용자의 이름을 설정해주세요.
+sweep_id = wandb.sweep(config.sweep_config, project=project_name, entity=entity_name)
 
-wandb.agent(sweep_id, wandb_setting, count=48)
+wandb.agent(sweep_id, wandb_setting, count=1)
 
 
 
