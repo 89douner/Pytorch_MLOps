@@ -4,15 +4,15 @@ sweep_config = {
     'method': 'bayes',
     'name':'bayes-30-sweep',
     'metric' : {
-        'name': 'best_acc',
+        'name': 'best_loss',
         'goal': 'maximize'   
         },
     'parameters' : {
         'epochs': {
-            'value' : 30
+            'value' : 1
         },
         'batch_size': {
-            'value' : 20
+            'value' : 12
         },
         'model': {
             'values' : ['resnet', 'scratch']  
