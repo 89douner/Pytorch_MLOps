@@ -46,7 +46,7 @@ class DiseaseDataset(object):
             #     A.MultiplicativeNoise(p=1.0),
             #     ], p=n_p),
 
-            A.Normalize(mean=(0.658,), std=(0.221)),
+            A.Normalize(mean=0.658, std=0.221),
             transforms.ToTensorV2(),
             ])
         
