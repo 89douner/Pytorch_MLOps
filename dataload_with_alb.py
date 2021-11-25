@@ -46,14 +46,14 @@ class DiseaseDataset(object):
             #     A.MultiplicativeNoise(p=1.0),
             #     ], p=n_p),
 
-            A.Normalize(mean=(0.485), std=(0.229)),
+            A.Normalize(mean=(0.658,), std=(0.221)),
             transforms.ToTensorV2(),
             ])
         
         elif self.mode == 'val':
             self.transforms = A.Compose([
                 A.Resize(self.image_size, self.image_size),
-                A.Normalize(mean=0.5, std=0.5),
+                A.Normalize(mean=0.658, std=0.221),
                 transforms.ToTensorV2()
             ])
         ##########################전처리 코드 끝############################

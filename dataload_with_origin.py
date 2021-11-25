@@ -47,13 +47,13 @@ class DiseaseDatasetOrig(object):
                     A.OpticalDistortion(distort_limit= w_config.distortion, p=0.3),
                     ], p=0.2),
 
-                A.Normalize(mean=(0.6254), std=(0.2712)),
+                A.Normalize(mean=0.658, std=0.221),
                 transforms.ToTensorV2(),
             ])
         elif self.mode == 'val':
             self.transforms = A.Compose([
                 A.Resize(self.image_size, self.image_size),
-                A.Normalize(mean=0.6254, std=0.2712),
+                A.Normalize(mean=0.658, std=0.221),
                 transforms.ToTensorV2()
             ])
         elif self.mode == 'test':
