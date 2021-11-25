@@ -1,16 +1,20 @@
 import math
 import os
 
+from torch.nn.modules.loss import CrossEntropyLoss
+
 CKPT_DIR = os.path.join(os.getcwd(), "best_dir")
 RESULTS_DIR = os.path.join(os.getcwd(), "result_dir_1")
 
 sweep_config = {
     'method': 'grid',
-    'name':'grid-c4-loss-test',
+    'name':'grid-augmentation-test',
     'metric' : {
         'name': 'best_acc',
         'goal': 'maximize'   
         },
+
+    ####Basic Hyper-parameters#####
     'parameters' : {
         'epochs': {
             'value' : 50},
@@ -25,42 +29,33 @@ sweep_config = {
         'seed':{
             'value': 0},#'values': [0, 3407]
         'learning_rate': {
-            'values': [1e-4, 1e-3] },# 'values': ['focal',  'CrossEntropy', 'LovaszHinge']},
-        
-        # 'blur':{
-        #     'values': [1, 3, 5, 7, 9]
-        # },
-        # 'brightness':{
-        #     'distribution': 'normal',
-        #     'mu': 0.1,
-        #     'sigma': 0.005,
-        # },
-        # 'contrast':{
-        #     'distribution': 'normal',
-        #     'mu': 0.2,
-        #     'sigma': 0.01,
-        # },
-        # 'noise':{
-        #     'distribution': 'normal',
-        #     'mu': 0.005,
-        #     'sigma': 0.0001,
-        # },
-        # 'shift':{
-        #     'distribution': 'normal',
-        #     'mu': 0.0625,
-        #     'sigma': 0.001,
-        # },
-        # 'rotate':{
-        #     'distribution': 'normal',
-        #     'mu': 10,
-        #     'sigma': 1,
-        # },
-        # 'distortion':{
-        #     'distribution': 'normal',
-        #     'mu': 0.05,
-        #     'sigma': 0.001,
-        # },
-
+            'values': 0.005},
+        'loss':{
+            'values': ['CrossEntropy'] # 'values': ['focal',  'CrossEntropy', 'LovaszHinge']},
+        },
+            
+        #####Data Augmentation Hyper-parameters##########
+        'blur':{
+            'values': [0, 1, 2, 3] #3
+        },
+        'brightness':{
+            'values': [0.0, 0.1, 0.2] #0.1
+        },
+        'contrast':{
+            'values': [0.0, 0.1, 0.2] #0.2
+        },
+        'noise':{
+            'values': [0.0, 0.005, 0.01] #0.005
+        },
+        'shift':{
+            'values': [0.0, 0.0625, 0.1] #0.0625
+        },
+        'rotate':{
+            'values': [0, 5, 10] #10
+        },
+        'distortion':{
+            'values': [0.0, 0.05, 0.1] #0.05
+        },
     },
     'early_terminate':{
         'type': 'hyperband',

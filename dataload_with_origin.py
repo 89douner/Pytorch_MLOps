@@ -24,53 +24,32 @@ class DiseaseDatasetOrig(object):
         ########################## 전처리 코드 ##########################
         if self.mode == 'train':
             self.transforms = A.Compose([
-                 A.OneOf([
-                    A.MedianBlur(blur_limit=3, p=0.1),
-                    A.MotionBlur(p=0.2),
-                    A.Sharpen(alpha=(0.01, 0.2), lightness=(0.5, 1.0), always_apply=False, p=0.2),
-                    ], p=0.2),
-                A.RandomBrightnessContrast(brightness_limit=(-0.1, 0.1), 
-                contrast_limit=(-0.2, 0.1), p=0.6),
                 A.OneOf([
-                    A.GaussNoise(var_limit = 0.005, p=0.2),
+                A.MedianBlur(blur_limit=w_config.blur, p=0.1),
+                A.MotionBlur(p=0.2),
+                A.Sharpen(alpha=(0.01, 0.2), lightness=(0.5, 1.0), always_apply=False, p=0.2),
+                ], p=0.2),
+
+                A.RandomBrightnessContrast(brightness_limit=w_config.brightness, contrast_limit=w_config.contrast, p=0.6),
+
+                A.OneOf([
+                    A.GaussNoise(var_limit = w_config.noise, p=0.2),
                     A.MultiplicativeNoise(p=0.2),
                     ], p=0.2),
+
                 A.HueSaturationValue(hue_shift_limit=0, sat_shift_limit=0, 
                                     val_shift_limit=0.1, p=0.3),
-                A.ShiftScaleRotate(shift_limit=0.0625, 
+
+                A.ShiftScaleRotate(shift_limit=w_config.shift, 
                                     scale_limit=0.2, 
-                                    rotate_limit=10, p=0.2),
+                                    rotate_limit=w_config.rotate, p=0.2),
                 A.OneOf([
-                    A.OpticalDistortion(p=0.3),
+                    A.OpticalDistortion(distort_limit= w_config.distortion, p=0.3),
                     ], p=0.2),
-                
+
                 A.Normalize(mean=(0.6254), std=(0.2712)),
                 transforms.ToTensorV2(),
             ])
-            #  A.OneOf([
-            #     A.MedianBlur(blur_limit=w_config.blur, p=0.1),
-            #     A.MotionBlur(p=0.2),
-            #     A.Sharpen(alpha=(0.01, 0.2), lightness=(0.5, 1.0), always_apply=False, p=0.2),
-            #     ], p=0.2),
-
-            # A.RandomBrightnessContrast(brightness_limit=w_config.brightness, contrast_limit=w_config.contrast, p=0.6),
-
-            # A.OneOf([
-            #     A.GaussNoise(var_limit = w_config.noise, p=0.2),
-            #     A.MultiplicativeNoise(p=0.2),
-            #     ], p=0.2),
-
-            # A.HueSaturationValue(hue_shift_limit=0, sat_shift_limit=0, 
-            #                     val_shift_limit=0.1, p=0.3),
-
-            # A.ShiftScaleRotate(shift_limit=w_config.shift, 
-            #                     scale_limit=0.2, 
-            #                     rotate_limit=w_config.rotate, p=0.2),
-            # A.OneOf([
-            #     A.OpticalDistortion(distort_limit= w_config.distortion, p=0.3),
-            #     ], p=0.2),
-
-        
         elif self.mode == 'val':
             self.transforms = A.Compose([
                 A.Resize(self.image_size, self.image_size),
@@ -143,7 +122,7 @@ if __name__ == '__main__':
     classes_name = os.listdir(os.path.join(data_dir, 'train'))
 
     train_data_dir = os.path.join(os.getcwd(), "RSNA_COVID_png_512", "train")
-    train_dataset = DiseaseDataset(train_data_dir, 512, 8, num_classes, classes_name, 'img', 'train')
+    train_dataset = DiseaseDatasetOrig(train_data_dir, 512, 8, num_classes, classes_name, 'img', 'train')
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=4, num_workers=0)
 
     #For shape test

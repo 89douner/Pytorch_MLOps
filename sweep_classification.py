@@ -26,9 +26,9 @@ import config
 def wandb_setting(sweep_config=None):
     wandb.init(config=sweep_config)
     w_config = wandb.config
-    name_str = 'loss: ' +  str(w_config.loss) + ' | l: ' +  str(w_config.learning_rate) + ' | o: ' + str(w_config.optimizer)
-    # name_str = 'bl' +  str(round(w_config.blur, 3)) + '-br' +  str(round(w_config.brightness, 3)) + ' -c:' + str(round(w_config.contrast, 3)) + ' -n:' + str(round(w_config.noise, 3)) \
-    #      + ' -s:' + str(round(w_config.shift, 3)) + ' -r:' + str(round(w_config.rotate,3)) + ' -d:' + str(round(w_config.distortion, 3)) 
+    #name_str = 'loss: ' +  str(w_config.loss) + ' | l: ' +  str(w_config.learning_rate) + ' | o: ' + str(w_config.optimizer)
+    name_str = 'bl:' +  str(round(w_config.blur, 3)) + ' -br:' +  str(round(w_config.brightness, 3)) + ' -c:' + str(round(w_config.contrast, 3)) + ' -n:' + str(round(w_config.noise, 3)) \
+          + ' -s:' + str(round(w_config.shift, 3)) + ' -r:' + str(round(w_config.rotate,3)) + ' -d:' + str(round(w_config.distortion, 3)) 
     wandb.run.name = name_str
 
     #########Random seed 고정해주기###########
@@ -64,10 +64,13 @@ def wandb_setting(sweep_config=None):
         net = model.Efficient(img_channel=1, num_classes=num_classes) # pretrained Efficient 모델 사용
 
     net = net.to(device) #딥러닝 모델 GPU 업로드
+
+    ###Focal loss Code####
     weights = torch.tensor([0.08, 0.17, 0.28, 0.47], dtype=torch.float32)
     weights = weights / weights.sum()
     weights = 1.0 / weights
     weights = weights / weights.sum()
+    #################
 
      # Loss Function
     if w_config.loss == 'CrossEntropy':
@@ -95,7 +98,7 @@ def wandb_setting(sweep_config=None):
     CKPT_DIR = os.path.join(os.getcwd(), "checkpoints_dir")
     ckpt_dir = os.path.join(CKPT_DIR, "checkpoints_" + name_str)
 
-    patience = 6
+    patience = 10
     wandb.watch(net, log='all') #wandb에 남길 log 기록하기
     sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_lr,  \
         device, w_config, classes_name, wandb, patience= patience, ckpt_dir=ckpt_dir)
@@ -107,9 +110,4 @@ project_name = 'Album_sweep' # 프로젝트 이름을 설정해주세요.
 entity_name  = 'pneumonia' # 사용자의 이름을 설정해주세요.
 sweep_id = wandb.sweep(config.sweep_config, project=project_name, entity=entity_name)
 
-wandb.agent(sweep_id, wandb_setting, count=50)
-
-
-
-
-
+wandb.agent(sweep_id, wandb_setting, count=2187)
