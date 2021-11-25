@@ -22,6 +22,8 @@ import wandb
 import config
 
 
+import torch.distributed as dist
+#from apex.apex.parallel import DistributedDataParallel as DDP
 
 def wandb_setting(sweep_config=None):
     wandb.init(config=sweep_config)
@@ -45,7 +47,7 @@ def wandb_setting(sweep_config=None):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     ##########################################데이터 로드 하기#################################################
-    data_dir = os.path.join(os.getcwd(), "RSNA_COVID_png_512") #train, val 폴더가 들어있는 경로
+    data_dir = os.path.join(os.getcwd(), "data") #train, val 폴더가 들어있는 경로
     classes_name = os.listdir(os.path.join(data_dir, 'train')) #폴더에 들어있는 클래스명
     num_classes =  len(os.listdir(os.path.join(data_dir, 'train'))) #train 폴더 안에 클래스 개수 만큼의 폴더가 있음
 
@@ -63,7 +65,10 @@ def wandb_setting(sweep_config=None):
     elif w_config.model == 'effnet':
         net = model.Efficient(img_channel=1, num_classes=num_classes) # pretrained Efficient 모델 사용
 
-    net = net.to(device) #딥러닝 모델 GPU 업로드
+    #net = net.to(device) #딥러닝 모델 GPU 업로드
+    net = nn.DataParallel(net)
+    net.cuda()
+
 
     ###Focal loss Code####
     weights = torch.tensor([0.08, 0.17, 0.28, 0.47], dtype=torch.float32)
@@ -106,8 +111,8 @@ def wandb_setting(sweep_config=None):
 #sweep_id = wandb.sweep(config.sweep_config, project="test", entity="douner89")
 #sweep_id = wandb.sweep(config.sweep_config, project="rsna_covid", entity="89douner")
 
-project_name = 'Album_sweep' # 프로젝트 이름을 설정해주세요.
-entity_name  = 'pneumonia' # 사용자의 이름을 설정해주세요.
+project_name = 'data_augmentation_grid_acc' # 프로젝트 이름을 설정해주세요.
+entity_name  = 'rsna_covid_down' # 사용자의 이름을 설정해주세요.
 sweep_id = wandb.sweep(config.sweep_config, project=project_name, entity=entity_name)
 
 wandb.agent(sweep_id, wandb_setting, count=2187)

@@ -6,6 +6,7 @@ from torch.nn.modules.loss import CrossEntropyLoss
 CKPT_DIR = os.path.join(os.getcwd(), "best_dir")
 RESULTS_DIR = os.path.join(os.getcwd(), "result_dir_1")
 
+
 sweep_config = {
     'method': 'grid',
     'name':'grid-augmentation-test',
@@ -19,7 +20,7 @@ sweep_config = {
         'epochs': {
             'value' : 50},
         'batch_size': {
-            'value' : 25},
+            'value' : 80},
         'model': {
             'value': 'resnet'}, #'values' : ['resnet', 'scratch'] 
         'optimizer': { 
@@ -29,14 +30,14 @@ sweep_config = {
         'seed':{
             'value': 0},#'values': [0, 3407]
         'learning_rate': {
-            'values': 0.005},
+            'value': 0.005},
         'loss':{
-            'values': ['CrossEntropy'] # 'values': ['focal',  'CrossEntropy', 'LovaszHinge']},
+            'value': 'CrossEntropy' # 'values': ['focal',  'CrossEntropy', 'LovaszHinge']},
         },
             
         #####Data Augmentation Hyper-parameters##########
         'blur':{
-            'values': [0, 1, 2, 3] #3
+            'values': [1, 3, 5] #3
         },
         'brightness':{
             'values': [0.0, 0.1, 0.2] #0.1
