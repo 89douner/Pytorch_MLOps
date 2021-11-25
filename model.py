@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from efficientnet_pytorch import EfficientNet
 from torchvision import models
+import torch
 
 # -*- coding: utf-8 -*-
 """
@@ -34,7 +35,12 @@ class Pre_Resnet50(nn.Module):
     def __init__(self, img_channel, num_classes, pretrained=True):
         super(Pre_Resnet50, self).__init__()
         self.backbone = models.resnet50(pretrained=pretrained)
-        self.backbone.conv1 = nn.Conv2d(img_channel, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        #self.backbone.conv1 = nn.Conv2d(img_channel, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        
+        checkpoint = torch.load(self.backbone)
+        conv1_weight = checkpoint['conv1.weight']
+        #checkpoint['conv1.weight'] = conv1_weight.mean(dim=1, keepdim=True)
+        self.backbone.conv1 = conv1_weight.mean(dim=1, keepdim=True)
 
         self.backbone.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.backbone.fc = nn.Linear(512 * 4, num_classes)
