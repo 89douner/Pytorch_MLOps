@@ -36,8 +36,8 @@ class Pre_Resnet50(nn.Module):
         self.backbone = models.resnet50(pretrained=pretrained)
         self.backbone.conv1 = nn.Conv2d(img_channel, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
 
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512 * 4, num_classes)
+        self.backbone.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.backbone.fc = nn.Linear(512 * 4, num_classes)
     
     def forward(self, x):
         x = self.backbone.conv1(x)

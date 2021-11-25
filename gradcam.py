@@ -70,12 +70,12 @@ def eval_model(val_loader, net, criterion, optim, data_dir, imgs):
 
 if __name__=='__main__':
     data_dir = os.path.join(os.getcwd(), "RSNA_COVID_png_512") #train, val 폴더가 들어있는 경로
-    num_classes =  len(os.listdir(os.path.join(data_dir, 'val')))
-    classes_name = os.listdir(os.path.join(data_dir, 'val'))
+    num_classes =  len(os.listdir(os.path.join(data_dir, 'test')))
+    classes_name = os.listdir(os.path.join(data_dir, 'test'))
 
 
-    val_data_dir = os.path.join(os.getcwd(), "RSNA_COVID_png_512", "val")
-    val_dataset = DiseaseDatasetOrig(val_data_dir, 512, 8, num_classes, classes_name, 'img', 'val')
+    val_data_dir = os.path.join(os.getcwd(), "RSNA_COVID_png_512", "test")
+    val_dataset = DiseaseDatasetOrig(val_data_dir, 512, 8, num_classes, classes_name, 'img', 'test')
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=1, num_workers=0)
 
     imgs = []

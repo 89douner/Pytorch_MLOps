@@ -1,19 +1,19 @@
 import math
 import os
 
-CKPT_DIR = os.path.join(os.getcwd(), "checkpoints_dir")
-RESULTS_DIR = os.path.join(os.getcwd(), "result_dir")
+CKPT_DIR = os.path.join(os.getcwd(), "best_dir")
+RESULTS_DIR = os.path.join(os.getcwd(), "result_dir_1")
 
 sweep_config = {
-    'method': 'bayes',
-    'name':'bayes-c50-disease-best_acc_v3',
+    'method': 'grid',
+    'name':'grid-c4-loss-test',
     'metric' : {
         'name': 'best_acc',
         'goal': 'maximize'   
         },
     'parameters' : {
         'epochs': {
-            'value' : 30},
+            'value' : 50},
         'batch_size': {
             'value' : 25},
         'model': {
@@ -25,40 +25,41 @@ sweep_config = {
         'seed':{
             'value': 0},#'values': [0, 3407]
         'learning_rate': {
-            'value': 0.005},#'values': [0.001, 0.005]
-        'blur':{
-            'values': [1, 3, 5, 7, 9]
-        },
-        'brightness':{
-            'distribution': 'normal',
-            'mu': 0.1,
-            'sigma': 0.005,
-        },
-        'contrast':{
-            'distribution': 'normal',
-            'mu': 0.2,
-            'sigma': 0.01,
-        },
-        'noise':{
-            'distribution': 'normal',
-            'mu': 0.005,
-            'sigma': 0.0001,
-        },
-        'shift':{
-            'distribution': 'normal',
-            'mu': 0.0625,
-            'sigma': 0.001,
-        },
-        'rotate':{
-            'distribution': 'normal',
-            'mu': 10,
-            'sigma': 1,
-        },
-        'distortion':{
-            'distribution': 'normal',
-            'mu': 0.05,
-            'sigma': 0.001,
-        },
+            'values': [1e-4, 1e-3] },# 'values': ['focal',  'CrossEntropy', 'LovaszHinge']},
+        
+        # 'blur':{
+        #     'values': [1, 3, 5, 7, 9]
+        # },
+        # 'brightness':{
+        #     'distribution': 'normal',
+        #     'mu': 0.1,
+        #     'sigma': 0.005,
+        # },
+        # 'contrast':{
+        #     'distribution': 'normal',
+        #     'mu': 0.2,
+        #     'sigma': 0.01,
+        # },
+        # 'noise':{
+        #     'distribution': 'normal',
+        #     'mu': 0.005,
+        #     'sigma': 0.0001,
+        # },
+        # 'shift':{
+        #     'distribution': 'normal',
+        #     'mu': 0.0625,
+        #     'sigma': 0.001,
+        # },
+        # 'rotate':{
+        #     'distribution': 'normal',
+        #     'mu': 10,
+        #     'sigma': 1,
+        # },
+        # 'distortion':{
+        #     'distribution': 'normal',
+        #     'mu': 0.05,
+        #     'sigma': 0.001,
+        # },
 
     },
     'early_terminate':{

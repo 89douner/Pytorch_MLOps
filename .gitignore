@@ -2,3 +2,6 @@ RSNA_COVID_png_512/
 wandb/
 __pycache__/
 *.pt
+result_dir/
+checkpoints_dir/
+*.json

@@ -3,14 +3,14 @@ import copy
 import torch
 import numpy as np
 import gc
+import os 
+from utils import EarlyStopping, save_net
 
-from utils import EarlyStopping
-
-def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim, scheduler, device, w_config, classes_name, wandb, patience,num_epoch):
+def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim, scheduler, device, w_config, classes_name, wandb, patience, ckpt_dir):
     wandb.watch(net, criterion, log='all', log_freq=10)
-    
-    since = time.time()
 
+    since = time.time()
+    num_epoch = w_config.epochs
     best_model_wts = copy.deepcopy(net.state_dict())
     best_loss, best_acc = 100, 0
     
@@ -56,7 +56,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                         loss.backward() #계산된 loss에 의해 backward (gradient) 계산
                         optim.step() #계산된 gradient를 참고하여 backpropagation으로 update
                         
-                        wandb.log({"Train Iteration loss": np.mean(loss_arr), 'Iteration_step': iteration_th})
+                        wandb.log({"Train Iteration loss": np.mean(loss_arr), 'Iteration_step': iteration_th}, commit=False)
                         print("TRAIN: EPOCH %04d / %04d | ITERATION %04d / %04d | LOSS %.4f" %
                         (epoch, num_epoch, iteration_th, num_iteration['train'], np.mean(loss_arr)))
                         
@@ -80,31 +80,34 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
 
             if phase == 'train':
-                wandb.log({'train_epoch_loss': epoch_loss, 'train_epoch_acc': epoch_acc})
+                wandb.log({'train_epoch_loss': epoch_loss, 'train_epoch_acc': epoch_acc}, commit=False)
             
             elif phase == 'val':
                 wandb.log({'val_epoch_loss': epoch_loss, 'val_epoch_acc': epoch_acc}, step=epoch)   
 
             print('Epoch {} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
+            save_net(ckpt_dir=ckpt_dir, net=net, optim=optim, epoch=epoch, is_best=False)
 
-            # deep copy the model
-            if epoch_loss < best_loss and phase=='val':
-                best_all_labels, best_all_preds, best_all_prob = [], [], []
-                best_loss = epoch_loss
-                best_model_wts = copy.deepcopy(net.state_dict())
-                
-                best_all_labels = all_labels
-                best_all_preds = all_preds
-                best_all_prob = all_prob
+            if phase=='val':
+                if epoch_loss < best_loss:
+                    best_all_labels, best_all_preds, best_all_prob = [], [], []
+                    best_loss = epoch_loss
+                    best_model_wts = copy.deepcopy(net.state_dict())
+                    
+                    best_all_labels = all_labels
+                    best_all_preds = all_preds
+                    best_all_prob = all_prob
 
-            if epoch_acc > best_acc and phase=='val':
-                best_acc = epoch_acc
+                if epoch_acc > best_acc :
+                    best_acc = epoch_acc
+                    
+                wandb.log({'best_acc': best_acc}, commit=False)
+                wandb.log({'best_loss': best_loss}, commit=False)
 
-            wandb.log({'best_acc': best_acc})
-            wandb.log({'best_loss': best_loss})
+                print('Epoch {} Best Loss: {:.4f} Best Acc: {:.4f}'.format(phase, best_loss, best_acc))
 
-        if phase == 'val':
-            early_stopping(epoch_acc, net)
+        if phase=='val':
+            early_stopping(epoch_loss, net)
 
             if early_stopping.early_stop:
                 wandb_log(wandb, best_all_labels, best_all_preds, best_all_prob, classes_name)
@@ -126,10 +129,12 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
 
     # load best model weights
     net.load_state_dict(best_model_wts)
+    
+    save_net(ckpt_dir=ckpt_dir, net=net, optim=optim, epoch=epoch, is_best=True, best_acc=best_acc)
     return net
 
 def wandb_log(wandb, best_all_labels, best_all_preds, best_all_prob, classes_name):
     # ROC, Precision Recall, Confusion Matrix penel 생성
-    wandb.log({'ROC curve': wandb.plots.ROC(best_all_labels, best_all_prob, classes_name)})
-    wandb.log({'Precision Recall': wandb.plots.precision_recall(best_all_labels, best_all_prob, classes_name)})
-    wandb.log({"Confusion Matrix" : wandb.plot.confusion_matrix(preds=best_all_preds, y_true=best_all_labels, class_names=classes_name)})
+    wandb.log({'ROC curve': wandb.plots.ROC(best_all_labels, best_all_prob, classes_name)}, commit=False)
+    wandb.log({'Precision Recall': wandb.plots.precision_recall(best_all_labels, best_all_prob, classes_name)}, commit=False)
+    wandb.log({"Confusion Matrix" : wandb.plot.confusion_matrix(preds=best_all_preds, y_true=best_all_labels, class_names=classes_name)}, commit=False)

@@ -9,11 +9,12 @@ import os
 from glob import glob
 
 import albumentations as A
-from albumentations.pytorch import transforms
+from albumentations.pytorch import transforms  
+from albumentations.augmentations.geometric.rotate import Rotate
 
 
 class DiseaseDataset(object):
-    def __init__(self, data_dir, img_size, bit, num_classes, classes_name, data_type=None, mode=None):
+    def __init__(self, data_dir, img_size, bit, num_classes, classes_name, data_type=None, mode=None, w_config=None):
         self.data_dir = data_dir
         self.image_size = img_size
         self.type = data_type
@@ -23,20 +24,30 @@ class DiseaseDataset(object):
         self.imgs = []
         self.label = []
         
+        s_p, c_p, r_p, d_p= 0, 0, 0, 0
+
+        s_p = float(w_config.shift == 'yes')
+        c_p = float(w_config.contrast == 'yes')
+        r_p = float(w_config.rotate == 'yes')
+        d_p = float(w_config.distortion == 'yes')
+
         ########################## 전처리 코드 ##########################
         if self.mode == 'train':
             self.transforms = A.Compose([
-                A.Resize(self.image_size, self.image_size),
-                # A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=10, p=0.2),
-                # A.OneOf([
-                #         A.OpticalDistortion(p=0.3),
-                #         ], p=0.2),
-                # A.OneOf([
-                #         A.GaussNoise(p=0.2),
-                #         A.MultiplicativeNoise(p=0.2),
-                #         ], p=0.2),
-                A.Normalize(mean=(0.485), std=(0.229)),
-                transforms.ToTensorV2()
+            A.Resize(self.image_size, self.image_size),
+            A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=0, p=s_p),
+            A.RandomContrast(p=c_p),
+            Rotate(limit=15, p=r_p),
+            A.OneOf([
+                A.OpticalDistortion(p=1.0),
+                ], p=d_p),
+            # A.OneOf([
+            #     A.GaussNoise(p=1.0),
+            #     A.MultiplicativeNoise(p=1.0),
+            #     ], p=n_p),
+
+            A.Normalize(mean=(0.485), std=(0.229)),
+            transforms.ToTensorV2(),
             ])
         
         elif self.mode == 'val':
