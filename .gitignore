@@ -5,3 +5,4 @@ __pycache__/
 result_dir/
 checkpoints_dir/
 *.json
+data/
