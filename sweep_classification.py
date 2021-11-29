@@ -25,6 +25,9 @@ import config
 import torch.distributed as dist
 #from apex.apex.parallel import DistributedDataParallel as DDP
 
+from imbalanced_dataset_sampler.torchsampler import ImbalancedDatasetSampler
+
+
 def wandb_setting(sweep_config=None):
     wandb.init(config=sweep_config)
     w_config = wandb.config
@@ -44,16 +47,19 @@ def wandb_setting(sweep_config=None):
     ###########################################
 
     batch_size= w_config.batch_size
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     ##########################################데이터 로드 하기#################################################
-    data_dir = os.path.join(os.getcwd(), "data") #train, val 폴더가 들어있는 경로
-    classes_name = os.listdir(os.path.join(data_dir, 'train')) #폴더에 들어있는 클래스명
-    num_classes =  len(os.listdir(os.path.join(data_dir, 'train'))) #train 폴더 안에 클래스 개수 만큼의 폴더가 있음
-
-    datasets = {x: DiseaseDatasetOrig(data_dir=os.path.join(data_dir, x), img_size=512, bit=8, 
+    data_path = os.path.join(os.getcwd(), "data") #train, val 폴더가 들어있는 경로
+    train_dir = 'over_train'
+    classes_name = os.listdir(os.path.join(data_path, train_dir)) #폴더에 들어있는 클래스명
+    num_classes =  len(os.listdir(os.path.join(data_path, train_dir))) #train 폴더 안에 클래스 개수 만큼의 폴더가 있음
+    
+    datasets = {x: DiseaseDatasetOrig(data_dir=os.path.join(data_path, train_dir), img_size=512, bit=8, 
                 num_classes=num_classes, classes_name=classes_name, data_type='img', mode= x, w_config=w_config) for x in ['train', 'val']}
     dataloaders = {x: DataLoader(datasets[x], batch_size=batch_size, shuffle=True, num_workers=0) for x in ['train', 'val']}
+
     dataset_sizes = {x: len(datasets[x]) for x in ['train', 'val']}
     num_iteration = {x: np.ceil(dataset_sizes[x] / batch_size) for x in ['train', 'val']}
     #############################################################################################################################
@@ -66,8 +72,8 @@ def wandb_setting(sweep_config=None):
         net = model.Efficient(img_channel=1, num_classes=num_classes) # pretrained Efficient 모델 사용
 
     #net = net.to(device) #딥러닝 모델 GPU 업로드
-    net = nn.DataParallel(net)
-    net.cuda()
+    _net = net.cuda()
+    net = nn.DataParallel(_net).to(device)
 
 
     ###Focal loss Code####

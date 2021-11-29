@@ -135,6 +135,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
 
 def wandb_log(wandb, best_all_labels, best_all_preds, best_all_prob, classes_name):
     # ROC, Precision Recall, Confusion Matrix penel 생성
-    wandb.log({'ROC curve': wandb.plots.ROC(best_all_labels, best_all_prob, classes_name)}, commit=False)
-    wandb.log({'Precision Recall': wandb.plots.precision_recall(best_all_labels, best_all_prob, classes_name)}, commit=False)
+    #wandb.log({'ROC curve': wandb.plots.ROC(best_all_labels, best_all_prob, classes_name)}, commit=False)
+    wandb.log({'ROC curve': wandb.plot.roc_curve(best_all_labels, best_all_prob, classes_name)}, commit=False)
+    #wandb.log({'Precision Recall': wandb.plots.precision_recall(best_all_labels, best_all_prob, classes_name)}, commit=False)
     wandb.log({"Confusion Matrix" : wandb.plot.confusion_matrix(preds=best_all_preds, y_true=best_all_labels, class_names=classes_name)}, commit=False)

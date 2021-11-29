@@ -8,7 +8,7 @@ RESULTS_DIR = os.path.join(os.getcwd(), "result_dir_1")
 
 
 sweep_config = {
-    'method': 'grid',
+    'method': 'bayes',
     'name':'grid-augmentation-test',
     'metric' : {
         'name': 'best_acc',
