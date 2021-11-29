@@ -21,11 +21,11 @@ from losses import FocalLoss, LovaszHingeLoss
 import wandb
 import config
 
+import albumentations as A
+from albumentations.pytorch import transforms
 
 import torch.distributed as dist
 #from apex.apex.parallel import DistributedDataParallel as DDP
-
-from imbalanced_dataset_sampler.torchsampler import ImbalancedDatasetSampler
 
 
 def wandb_setting(sweep_config=None):
@@ -52,16 +52,54 @@ def wandb_setting(sweep_config=None):
 
     ##########################################데이터 로드 하기#################################################
     data_path = os.path.join(os.getcwd(), "data") #train, val 폴더가 들어있는 경로
-    train_dir = 'over_train'
+    train_dir = 'train'
     classes_name = os.listdir(os.path.join(data_path, train_dir)) #폴더에 들어있는 클래스명
     num_classes =  len(os.listdir(os.path.join(data_path, train_dir))) #train 폴더 안에 클래스 개수 만큼의 폴더가 있음
     
-    datasets = {x: DiseaseDatasetOrig(data_dir=os.path.join(data_path, train_dir), img_size=512, bit=8, 
-                num_classes=num_classes, classes_name=classes_name, data_type='img', mode= x, w_config=w_config) for x in ['train', 'val']}
-    dataloaders = {x: DataLoader(datasets[x], batch_size=batch_size, shuffle=True, num_workers=0) for x in ['train', 'val']}
+    ########################## 전처리 코드 ##########################
+    transform = { 
+        train_dir : A.Compose([
+                A.OneOf([
+                A.MedianBlur(blur_limit=w_config.blur, p=0.1),
+                A.MotionBlur(p=0.2),
+                A.Sharpen(alpha=(0.01, 0.2), lightness=(0.5, 1.0), always_apply=False, p=0.2),
+                ], p=0.2),
 
-    dataset_sizes = {x: len(datasets[x]) for x in ['train', 'val']}
-    num_iteration = {x: np.ceil(dataset_sizes[x] / batch_size) for x in ['train', 'val']}
+                A.RandomBrightnessContrast(brightness_limit=w_config.brightness, contrast_limit=w_config.contrast, p=0.6),
+
+                A.OneOf([
+                    A.GaussNoise(var_limit = w_config.noise, p=0.2),
+                    A.MultiplicativeNoise(p=0.2),
+                    ], p=0.2),
+
+                A.HueSaturationValue(hue_shift_limit=0, sat_shift_limit=0, 
+                                    val_shift_limit=0.1, p=0.3),
+
+                A.ShiftScaleRotate(shift_limit=w_config.shift, 
+                                    scale_limit=0.2, 
+                                    rotate_limit=w_config.rotate, p=0.2),
+                A.OneOf([
+                    A.OpticalDistortion(distort_limit= w_config.distortion, p=0.3),
+                    ], p=0.2),
+
+                A.Normalize(mean=0.658, std=0.221),
+                transforms.ToTensorV2(),
+            ]),
+
+        'val': A.Compose([
+                        A.Resize(512, 512),
+                        A.Normalize(mean=0.658, std=0.221),
+                        transforms.ToTensorV2()
+            ])
+    }
+        ##########################전처리 코드 끝############################
+
+    datasets = {x: DiseaseDatasetOrig(data_dir=os.path.join(data_path, x), bit=8, num_classes=num_classes, 
+                transforms=transform[x], data_type='img', mode= x) for x in [train_dir, 'val']}
+    dataloaders = {x: DataLoader(datasets[x], batch_size=batch_size, shuffle=True, num_workers=0) for x in [train_dir, 'val']}
+
+    dataset_sizes = {x: len(datasets[x]) for x in [train_dir, 'val']}
+    num_iteration = {x: np.ceil(dataset_sizes[x] / batch_size) for x in [train_dir, 'val']}
     #############################################################################################################################
 
     if w_config.model == 'resnet':
@@ -118,7 +156,7 @@ def wandb_setting(sweep_config=None):
 #sweep_id = wandb.sweep(config.sweep_config, project="rsna_covid", entity="89douner")
 
 project_name = 'data_augmentation_grid_acc' # 프로젝트 이름을 설정해주세요.
-entity_name  = 'rsna_covid_down' # 사용자의 이름을 설정해주세요.
+entity_name  = 'pneumonia' # 사용자의 이름을 설정해주세요.
 sweep_id = wandb.sweep(config.sweep_config, project=project_name, entity=entity_name)
 
 wandb.agent(sweep_id, wandb_setting, count=2187)

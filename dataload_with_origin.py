@@ -12,57 +12,15 @@ from albumentations.augmentations.geometric.rotate import Rotate
 
 
 class DiseaseDatasetOrig(object):
-    def __init__(self, data_dir, img_size, bit, num_classes, classes_name, data_type=None, mode=None, w_config=None):
+    def __init__(self, data_dir,  bit, num_classes, transforms, data_type=None, mode=None):
         self.data_dir = data_dir
-        self.image_size = img_size
         self.type = data_type
         self.mode = mode
         self.bit = bit #bit(color) depth
         self.numclasses = num_classes
         self.imgs = []
-
-        ########################## 전처리 코드 ##########################
-        if self.mode == 'train':
-            self.transforms = A.Compose([
-                A.OneOf([
-                A.MedianBlur(blur_limit=w_config.blur, p=0.1),
-                A.MotionBlur(p=0.2),
-                A.Sharpen(alpha=(0.01, 0.2), lightness=(0.5, 1.0), always_apply=False, p=0.2),
-                ], p=0.2),
-
-                A.RandomBrightnessContrast(brightness_limit=w_config.brightness, contrast_limit=w_config.contrast, p=0.6),
-
-                A.OneOf([
-                    A.GaussNoise(var_limit = w_config.noise, p=0.2),
-                    A.MultiplicativeNoise(p=0.2),
-                    ], p=0.2),
-
-                A.HueSaturationValue(hue_shift_limit=0, sat_shift_limit=0, 
-                                    val_shift_limit=0.1, p=0.3),
-
-                A.ShiftScaleRotate(shift_limit=w_config.shift, 
-                                    scale_limit=0.2, 
-                                    rotate_limit=w_config.rotate, p=0.2),
-                A.OneOf([
-                    A.OpticalDistortion(distort_limit= w_config.distortion, p=0.3),
-                    ], p=0.2),
-
-                A.Normalize(mean=0.658, std=0.221),
-                transforms.ToTensorV2(),
-            ])
-        elif self.mode == 'val':
-            self.transforms = A.Compose([
-                A.Resize(self.image_size, self.image_size),
-                A.Normalize(mean=0.658, std=0.221),
-                transforms.ToTensorV2()
-            ])
-        elif self.mode == 'test':
-            self.transforms = A.Compose([
-                A.Resize(self.image_size, self.image_size),
-                A.Normalize(mean=0.6254, std=0.2712),
-                transforms.ToTensorV2()
-            ])
-        ##########################전처리 코드 끝############################
+        self.transforms = transforms
+        
 
         ###data_dir -> train or val 폴더
         self.lst_data = os.listdir(self.data_dir) #train or val 폴더에 들어있는 하위 폴더 -> 클래스 명(알파벳순으로 인덱스 부여) -> ex) normal, pneumonia → lst_data[0]='normal'
