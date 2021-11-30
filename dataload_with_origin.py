@@ -21,8 +21,10 @@ class DiseaseDatasetOrig(object):
         self.numclasses = num_classes
         self.imgs = []
 
+        self.data_dir_name = os.path.basename(os.path.normpath(self.data_dir))
+
         ########################## 전처리 코드 ##########################
-        if self.mode == 'train':
+        if self.mode == self.data_dir_name:
             self.transforms = A.Compose([
                 A.OneOf([
                 A.MedianBlur(blur_limit=w_config.blur, p=0.1),

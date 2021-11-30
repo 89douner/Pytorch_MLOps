@@ -6,7 +6,7 @@ import gc
 import os 
 from utils import EarlyStopping, save_net
 
-def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim, scheduler, device, w_config, classes_name, wandb, patience, ckpt_dir):
+def train_model(train_dir, dataloaders, dataset_sizes, num_iteration, net, criterion, optim, scheduler, device, w_config, classes_name, wandb, patience, ckpt_dir):
     wandb.watch(net, criterion, log='all', log_freq=10)
 
     since = time.time()
@@ -22,8 +22,8 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
     for epoch in range(1, num_epoch+1):
         all_labels, all_preds, all_prob = [], [], []
 
-        for phase in ['train', 'val']:
-            if phase == 'train':
+        for phase in [train_dir, 'val']:
+            if phase == train_dir:
                 net.train()
             else:
                 net.eval()
@@ -43,7 +43,7 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                 # backward pass ← zero the parameter gradients
                 optim.zero_grad()
 
-                with torch.set_grad_enabled(phase == "train"): # track history if only in train
+                with torch.set_grad_enabled(phase == train_dir): # track history if only in train
                     outputs = net(inputs) #output 결과값은 softmax 입력 직전의 logit 값들
                     _, preds = torch.max(outputs, 1) #pred: 0 → Normal <== labels 참고
                     #preds2 = outputs.sigmoid() > 0.5
@@ -52,13 +52,13 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                     loss_arr += [loss.item()] #Iteration 당 Loss 계산
 
 
-                    if phase == "train":
+                    if phase == train_dir:
                         loss.backward() #계산된 loss에 의해 backward (gradient) 계산
                         optim.step() #계산된 gradient를 참고하여 backpropagation으로 update
                         
                         wandb.log({"Train Iteration loss": np.mean(loss_arr), 'Iteration_step': iteration_th}, commit=False)
                         print("TRAIN: EPOCH %04d / %04d | ITERATION %04d / %04d | LOSS %.4f" %
-                        (epoch, num_epoch, iteration_th, num_iteration['train'], np.mean(loss_arr)))
+                        (epoch, num_epoch, iteration_th, num_iteration[train_dir], np.mean(loss_arr)))
                         
                     elif phase == 'val':
                         all_labels.extend(labels.detach().cpu().numpy())
@@ -71,15 +71,15 @@ def train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optim
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
-            if phase == 'train' and w_config.warm_up == 'yes':
+            if phase == train_dir and w_config.warm_up == 'yes':
                 scheduler.step_ReduceLROnPlateau(np.mean(loss_arr)) #←← warm-up 사용 시 learning rate scheduler 실행
-            elif phase == 'train' and w_config.warm_up == 'no':
+            elif phase == train_dir and w_config.warm_up == 'no':
                 scheduler.step(np.mean(loss_arr)) #←← warm-up 사용하지 않을 시 learning rate scheduler 실행
 
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
 
-            if phase == 'train':
+            if phase == train_dir:
                 wandb.log({'train_epoch_loss': epoch_loss, 'train_epoch_acc': epoch_acc}, commit=False)
             
             elif phase == 'val':

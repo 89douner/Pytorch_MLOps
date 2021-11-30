@@ -56,12 +56,12 @@ def wandb_setting(sweep_config=None):
     classes_name = os.listdir(os.path.join(data_path, train_dir)) #폴더에 들어있는 클래스명
     num_classes =  len(os.listdir(os.path.join(data_path, train_dir))) #train 폴더 안에 클래스 개수 만큼의 폴더가 있음
     
-    datasets = {x: DiseaseDatasetOrig(data_dir=os.path.join(data_path, train_dir), img_size=512, bit=8, 
-                num_classes=num_classes, classes_name=classes_name, data_type='img', mode= x, w_config=w_config) for x in ['train', 'val']}
-    dataloaders = {x: DataLoader(datasets[x], batch_size=batch_size, shuffle=True, num_workers=0) for x in ['train', 'val']}
+    datasets = {x: DiseaseDatasetOrig(data_dir=os.path.join(data_path, x), img_size=512, bit=8, 
+                num_classes=num_classes, classes_name=classes_name, data_type='img', mode= x, w_config=w_config) for x in [train_dir, 'val']}
+    dataloaders = {x: DataLoader(datasets[x], batch_size=batch_size, shuffle=True, num_workers=0) for x in [train_dir, 'val']}
 
-    dataset_sizes = {x: len(datasets[x]) for x in ['train', 'val']}
-    num_iteration = {x: np.ceil(dataset_sizes[x] / batch_size) for x in ['train', 'val']}
+    dataset_sizes = {x: len(datasets[x]) for x in [train_dir, 'val']}
+    num_iteration = {x: np.ceil(dataset_sizes[x] / batch_size) for x in [train_dir, 'val']}
     #############################################################################################################################
 
     if w_config.model == 'resnet':
@@ -111,7 +111,7 @@ def wandb_setting(sweep_config=None):
 
     patience = 10
     wandb.watch(net, log='all') #wandb에 남길 log 기록하기
-    sweep_train.train_model(dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_lr,  \
+    sweep_train.train_model(train_dir, dataloaders, dataset_sizes, num_iteration, net, criterion, optimizer_ft, scheduler_lr,  \
         device, w_config, classes_name, wandb, patience= patience, ckpt_dir=ckpt_dir)
 
 #sweep_id = wandb.sweep(config.sweep_config, project="test", entity="douner89")
