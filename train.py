@@ -30,14 +30,14 @@ np.random.seed(random_seed)
 
 
 ##########################################데이터 로드 하기#################################################
-data_dir = os.path.join(os.getcwd(), "RSNA_COVID_png_512")
+data_dir = os.path.join(os.getcwd(), "data")
 print(data_dir)
 batch_size= 8
 #############################################################################################################################
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def train_model(net, criterion, optim, num_epoch):
+def train_model(net, criterion, optim, dataloaders, dataset_sizes, num_epoch):
     since = time.time()
 
     best_model_wts = copy.deepcopy(net.state_dict())
@@ -55,7 +55,7 @@ def train_model(net, criterion, optim, num_epoch):
             running_loss = 0
 
             #train dataset 로드하기
-            for iteration_th, (inputs, labels) in enumerate(dataloaders[phase]): #iteration_th: 몇 번재 iteration 인지 알려 줌 "ex) batch_th=0 ← 첫 번째 batch 시작"
+            for num_iteration, (inputs, labels) in enumerate(dataloaders): #iteration_th: 몇 번재 iteration 인지 알려 줌 "ex) batch_th=0 ← 첫 번째 batch 시작"
                 
                 ###########################GPU에 데이터 업로드##########################
                 inputs = inputs.to(device) #image 데이터 GPU에 업로드
@@ -78,20 +78,20 @@ def train_model(net, criterion, optim, num_epoch):
                         loss.backward() #계산된 loss에 의해 backward (gradient) 계산
                         optim.step() #계산된 gradient를 참고하여 backpropagation으로 update
                         
-                        # print("TRAIN: EPOCH %04d / %04d | ITERATION %04d / %04d | LOSS %.4f" %
-                        #(epoch + 1, num_epoch, iteration_th, num_iteration['train'], np.mean(loss_arr)))
+                        print("TRAIN: EPOCH %04d / %04d | LOSS %.4f" %
+                        (epoch + 1, num_epoch,  np.mean(loss_arr)))
 
                     elif phase == 'val':
                         pass
                         # print()
-                        # print("VALID: EPOCH %04d / %04d | BATCH %04d / %04d | LOSS %.4f" %
-                        #         (epoch + 1, num_epoch, num_iteration['val'], num_iteration['val'], np.mean(loss_arr))) 
+                        print("VALID: EPOCH %04d / %04d  | LOSS %.4f" %
+                                 (epoch + 1, num_epoch,  np.mean(loss_arr))) 
 
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
-            epoch_loss = running_loss / dataset_sizes[phase]
-            epoch_acc = running_corrects.double() / dataset_sizes[phase]
+            epoch_loss = running_loss / dataset_sizes
+            epoch_acc = running_corrects.double() / dataset_sizes
 
             # print('Epoch {} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
@@ -115,7 +115,7 @@ def train_model(net, criterion, optim, num_epoch):
 ####train 폴더 안에 클래스 개수 만큼의 폴더가 있음######
 num_classes =  len(os.listdir(os.path.join(data_dir, 'train'))) 
 
-net = model.Pre_Resnet50(img_channel=1, num_classes=num_classes)
+net = model.Efficient(img_channel=1, num_classes=num_classes)
 # net = model.ResNet50(img_channel=1, num_classes=num_classes)
 
 #딥러닝 모델 GPU 업로드
@@ -136,20 +136,14 @@ scheduler_lr = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer_ft
 
 for i in range(2):
     print()
-    
-    datasets = {x: DiseaseDataset(data_dir=os.path.join(data_dir, x), img_size=512, bit=8, data_type='img', mode= x ) for x in ['train', 'val']}
+    data_dir = os.path.join(os.getcwd(), "data") #train, val 폴더가 들어있는 경로
     num_classes =  len(os.listdir(os.path.join(data_dir, 'train')))
-    
+    classes_name = os.listdir(os.path.join(data_dir, 'train'))
 
-    loader_since = time.time()
-    
-    datasets = {x: DiseaseDatasetOrig(data_dir=os.path.join(data_dir, x), img_size=512, bit=8, data_type='img', mode= x, num_cls=num_classes) for x in ['train', 'val']}
-    dataloaders = {x: DataLoader(datasets[x], batch_size=batch_size, shuffle=False, num_workers=0) for x in ['train', 'val']}
-    time_elapsed = time.time() - loader_since
-    print(f'Dataload complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.4f}s')
+    train_data_dir = os.path.join(os.getcwd(), "data", "train")
+    train_dataset = DiseaseDataset(train_data_dir, 512, 8, num_classes, classes_name, 'img', 'train')
+    dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=4, num_workers=0)
+    dataset_sizes = len(train_dataset)
 
-    dataset_sizes = {x: len(datasets[x]) for x in ['train', 'val']}
-    num_iteration = {x: np.ceil(dataset_sizes[x] / batch_size) for x in ['train', 'val']}
-
-    model_ft = train_model(net, criterion, optimizer_ft, num_epoch=20)
+    model_ft = train_model(net, criterion, optimizer_ft, dataloader, dataset_sizes, num_epoch=20)
     print('-' * 10)
