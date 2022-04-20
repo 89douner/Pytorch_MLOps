@@ -38,7 +38,7 @@ class Pre_Resnet50(nn.Module):
         self.backbone = models.resnet50(pretrained=pretrained)
         self.backbone.conv1 = nn.Conv2d(img_channel, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
         
-        checkpoint = torch.load("/home/ubuntu/.cache/torch/checkpoints/resnet50-19c8e357.pth")
+        checkpoint = torch.load("/root/.cache/torch/hub/checkpoints/resnet50-0676ba61.pth")
         conv1_weight = checkpoint['conv1.weight']
         #checkpoint['conv1.weight'] = conv1_weight.mean(dim=1, keepdim=True)
         self.backbone.conv1.weight = torch.nn.Parameter(conv1_weight.mean(dim=1, keepdim=True))

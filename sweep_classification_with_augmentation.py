@@ -9,7 +9,9 @@ import numpy as np
 import model
 import sweep_train
 
-from dataloader_alb import DiseaseDataset
+from dataload_with_alb  import DiseaseDataset
+from dataload_with_origin import DiseaseDatasetOrig
+
 from torch.utils.data import DataLoader
 
 from warmup_scheduler import GradualWarmupScheduler
@@ -30,7 +32,8 @@ def wandb_setting(sweep_config=None):
     wandb.init(config=sweep_config)
     w_config = wandb.config
     #name_str = 'loss: ' +  str(w_config.loss) + ' | l: ' +  str(w_config.learning_rate) + ' | o: ' + str(w_config.optimizer)
-    name_str = '-model: ' + str(w_config.model) + '   -optimizer: ' + str(w_config.optimizer) + '   -warm_up: ' + str(w_config.warm_up) + '-   seed:' + str(w_config.seed) + '   -loss: ' + str(w_config.loss) 
+    name_str = 'bl:' +  str(round(w_config.blur, 3)) + ' -br:' +  str(round(w_config.brightness, 3)) + ' -c:' + str(round(w_config.contrast, 3)) + ' -n:' + str(round(w_config.noise, 3)) \
+          + ' -s:' + str(round(w_config.shift, 3)) + ' -r:' + str(round(w_config.rotate,3)) + ' -d:' + str(round(w_config.distortion, 3)) 
     wandb.run.name = name_str
 
     #########Random seed 고정해주기###########
@@ -48,20 +51,18 @@ def wandb_setting(sweep_config=None):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     ##########################################데이터 로드 하기#################################################
-    data_path = '/workspace/dataset/' #train, val 폴더가 들어있는 경로
-    
-    train_dir = 'train'
-    val_dir = 'val'
+    data_path = os.path.join(os.getcwd(), "data") #train, val 폴더가 들어있는 경로
+    train_dir = 'over_train'
     classes_name = os.listdir(os.path.join(data_path, train_dir)) #폴더에 들어있는 클래스명
     num_classes =  len(os.listdir(os.path.join(data_path, train_dir))) #train 폴더 안에 클래스 개수 만큼의 폴더가 있음
     
     
-    datasets = {x: DiseaseDataset(data_dir=os.path.join(data_path, x), img_size=224, bit=8, 
-                num_classes=num_classes, classes_name=classes_name, data_type='numpy', mode= x, w_config=w_config) for x in [train_dir, val_dir]}
-    dataloaders = {x: DataLoader(datasets[x], batch_size=batch_size, shuffle=True, num_workers=0) for x in [train_dir, val_dir]}
+    datasets = {x: DiseaseDatasetOrig(data_dir=os.path.join(data_path, x), img_size=512, bit=8, 
+                num_classes=num_classes, classes_name=classes_name, data_type='img', mode= x, w_config=w_config) for x in [train_dir, 'val']}
+    dataloaders = {x: DataLoader(datasets[x], batch_size=batch_size, shuffle=True, num_workers=0) for x in [train_dir, 'val']}
     
-    dataset_sizes = {x: len(datasets[x]) for x in [train_dir, val_dir]}
-    num_iteration = {x: np.ceil(dataset_sizes[x] / batch_size) for x in [train_dir, val_dir]}
+    dataset_sizes = {x: len(datasets[x]) for x in [train_dir, 'val']}
+    num_iteration = {x: np.ceil(dataset_sizes[x] / batch_size) for x in [train_dir, 'val']}
     
     #############################################################################################################################
 
@@ -69,7 +70,7 @@ def wandb_setting(sweep_config=None):
         net = model.Pre_Resnet50(img_channel=1, num_classes=num_classes) # pretrained Resnet101 모델 사용
     elif w_config.model == 'scratch':
         net = model.ResNet50(img_channel=1, num_classes=num_classes) #gray scale = 1, color scale =3
-    elif w_config.model == 'efficient':
+    elif w_config.model == 'effnet':
         net = model.Efficient(img_channel=1, num_classes=num_classes) # pretrained Efficient 모델 사용
 
     #net = net.to(device) #딥러닝 모델 GPU 업로드
@@ -107,7 +108,7 @@ def wandb_setting(sweep_config=None):
         scheduler_lr = GradualWarmupScheduler(optimizer_ft, multiplier=1, total_epoch=5, after_scheduler=scheduler_lr)
 
     ########################################################################################
-    CKPT_DIR =  "/workspace/Pytorch_MLOps/checkpoints_dir"
+    CKPT_DIR = os.path.join(os.getcwd(), "checkpoints_dir")
     ckpt_dir = os.path.join(CKPT_DIR, "checkpoints_" + name_str)
 
     patience = 10

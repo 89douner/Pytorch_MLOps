@@ -20,44 +20,27 @@ sweep_config = {
         'epochs': {
             'value' : 50},
         'batch_size': {
-            'value' : 80},
+            'value' : 4},
         'model': {
-            'value': 'resnet'}, #'values' : ['resnet', 'scratch'] 
+            'value': 'resnet'}, 
+            #'values' : ['resnet', 'scratch','efficient']}, 
         'optimizer': { 
-            'value': 'adabelief'},#'values': ['adam', 'sgd', 'adabelief']
+            'value': 'adabelief'},
+            #'values': ['adam', 'sgd', 'adabelief']},
         'warm_up':{
-            'value': 'no'}, #'values': ['yes', 'no']
+            #'value': 'no'}, 
+            'values': ['yes', 'no']},
         'seed':{
-            'value': 0},#'values': [0, 3407]
+            #'value': 0},
+            'values': [0, 3407]},
         'learning_rate': {
             'value': 0.005},
         'loss':{
-            'value': 'CrossEntropy' # 'values': ['focal',  'CrossEntropy', 'LovaszHinge']},
+            'value': 'focal'}, 
+            #'values': ['focal',  'CrossEntropy']},
+            #'values': ['focal',  'CrossEntropy', 'LovaszHinge']},
         },
-            
-        #####Data Augmentation Hyper-parameters##########
-        'blur':{
-            'values': [1, 3, 5] #3
-        },
-        'brightness':{
-            'values': [0.0, 0.1, 0.2] #0.1
-        },
-        'contrast':{
-            'values': [0.0, 0.1, 0.2] #0.2
-        },
-        'noise':{
-            'values': [0.0, 0.005, 0.01] #0.005
-        },
-        'shift':{
-            'values': [0.0, 0.0625, 0.1] #0.0625
-        },
-        'rotate':{
-            'values': [0, 5, 10] #10
-        },
-        'distortion':{
-            'values': [0.0, 0.05, 0.1] #0.05
-        },
-    },
+        
     'early_terminate':{
         'type': 'hyperband',
         's': 2,
