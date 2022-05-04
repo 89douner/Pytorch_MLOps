@@ -28,19 +28,22 @@ class DiseaseDataset(object):
                 A.Resize(self.image_size, self.image_size),
                 A.Flip(p=0.5),
                 A.HorizontalFlip(p=0.5),
-                A.Normalize(mean=0.658, std=0.221),
+                #A.Normalize(mean=0.0, std=1.0),
+                A.Normalize(mean=0.5, std=0.5), #img = (img - mean * max_pixel_value) / (std * max_pixel_value) <-  max_pixel_value=255.0 로 세팅되어 있음 (github 참고)
                 transforms.ToTensorV2()
             ])
         elif self.mode == 'val':
             self.transforms = A.Compose([
                 A.Resize(self.image_size, self.image_size),
-                A.Normalize(mean=0.658, std=0.221),
+                A.Normalize(mean=0.5, std=0.5), #img = (img - mean * max_pixel_value) / (std * max_pixel_value) <-  max_pixel_value=255.0 로 세팅되어 있음 (github 참고)
+                #A.Normalize(mean=0.0, std=1),
                 transforms.ToTensorV2()
             ])
         elif self.mode == 'test':
             self.transforms = A.Compose([
                 A.Resize(self.image_size, self.image_size),
-                A.Normalize(mean=0.6254, std=0.2712),
+                #A.Normalize(mean=0.0, std=1.0),
+                A.Normalize(mean=0.5, std=0.5), #img = (img - mean * max_pixel_value) / (std * max_pixel_value) <-  max_pixel_value=255.0 로 세팅되어 있음 (github 참고)
                 transforms.ToTensorV2()
             ])
         ##########################전처리 코드 끝############################
@@ -91,6 +94,16 @@ class DiseaseDataset(object):
         
         elif self.type == 'numpy':
             numpy_data = np.load(os.path.join(self.data_dir, self.imgs[idx][0], self.imgs[idx][1]))
+            min_numpy_data = np.min(numpy_data)
+            max_numpy_data = np.max(numpy_data)
+
+            norm_check = np.max(numpy_data) #numpy data가 normalization 되어 있는건지 체크, albamentation에서 normalization 들어가기 때문에 사전에 np 값이 normalization 되면 안 됨 (그래서 체크)
+            if norm_check < 1.1:
+                original_numpy = numpy_data*65535 #최초의 데이터 범위 (0~65535)
+                numpy_data = original_numpy/255 #albumentation의 A.Normalize의 max_pixel_value가 255로 세팅되었기 때문에, 255로 세팅
+                #위의 두 줄을 그냥 애초에 numpy_data=numpy*255로 하면되는데, 가독성 때문에 위와 같이 구현
+                max_check = np.max(numpy_data)
+                min_check = np.min(numpy_data)
             
             #gray scale인 경우 np_img의 차원이 width, height 2차원으로만 구성 → dimension 차원이 생략됨
             #딥러닝 모델의 모든 입력 값은 dimension 차원을 포함한 3차원으로 구성되어야 함     
@@ -106,17 +119,19 @@ class DiseaseDataset(object):
                     label = i 
             
             np_img = self.transforms(image=np_img)["image"]
+            np_img_max = torch.max(np_img)
+            np_img_min = torch.min(np_img)
 
             return np_img, label
 
 
 if __name__ == '__main__':
-    data_dir = os.path.join(os.getcwd(), "RSNA_COVID_png_512") #train, val 폴더가 들어있는 경로
-    num_classes =  len(os.listdir(os.path.join(data_dir, 'train')))
-    classes_name = os.listdir(os.path.join(data_dir, 'train'))
+    data_dir = '/workspace/dataset/' #train, val 폴더가 들어있는 경로
+    num_classes =  3
+    classes_name = 'class0'
 
-    train_data_dir = os.path.join(os.getcwd(), "RSNA_COVID_png_512", "train")
-    train_dataset = DiseaseDataset(train_data_dir, 512, 8, num_classes, classes_name, 'img', 'train')
+    train_data_dir = os.path.join(data_dir, "val")
+    train_dataset = DiseaseDataset(train_data_dir, 500, 8, num_classes, classes_name, 'numpy', 'val')
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=4, num_workers=0)
 
     #For shape test
