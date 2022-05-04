@@ -86,7 +86,7 @@ def train_model(train_dir, dataloaders, dataset_sizes, num_iteration, net, crite
                 wandb.log({'val_epoch_loss': epoch_loss, 'val_epoch_acc': epoch_acc}, step=epoch)   
 
             print('Epoch {} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
-            save_net(ckpt_dir=ckpt_dir, net=net, optim=optim, epoch=epoch, is_best=False)
+            
 
             if phase=='val':
                 if epoch_loss < best_loss:
@@ -97,6 +97,8 @@ def train_model(train_dir, dataloaders, dataset_sizes, num_iteration, net, crite
                     best_all_labels = all_labels
                     best_all_preds = all_preds
                     best_all_prob = all_prob
+                    
+                    save_net(ckpt_dir=ckpt_dir, net=net, optim=optim, epoch=epoch, is_best=False)
 
                 if epoch_acc > best_acc :
                     best_acc = epoch_acc
